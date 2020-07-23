@@ -1,13 +1,14 @@
 -------------------------------- MODULE types ---------------------------------
-EXTENDS Integers
+EXTENDS Integers, FiniteSets
 -------------------------------------------------------------------------------
 
 \* Множества идентификаторов
-SubjectIDs  == 0..4
-ObjectIDs   == 0..10
+SubjectIDs  == 0..2 \* TODO: 4
+ObjectIDs   == 0..2 \* TODO: 5+
 
 \* Модельные значения состояний объектов
-ObjectStates== 0..10
+ObjectStates == 0..5
+ObjectStateMax == Cardinality(ObjectStates) - 1
 
 \* Типы сущностей системы
 SubjTypes == {"users","system","sorm"}

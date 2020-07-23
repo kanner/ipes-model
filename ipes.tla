@@ -174,12 +174,12 @@ TypeInv == /\ S_active \subseteq Subjects
 
 \* Init
 \* Инициализация модели
-Init == /\ S_active = {s0}
-        /\ O_func = {o0}
-        /\ O_data = {}
+Init == /\ S_active = {s_0, s_sorm}
+        /\ O_func = {o_0, o_s}
+        /\ O_data = {} (*o_sorm*)
         /\ O_na = {}
-        /\ S = {s0}
         /\ O = {o0}
+        /\ S = {s_2}
         /\ Q = {}
 
 \* Next
