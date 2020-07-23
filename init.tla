@@ -2,7 +2,7 @@
 EXTENDS TLC, Integers, types
 -------------------------------------------------------------------------------
 
-VARIABLES S_active, O_func, O_data, O_na, S, O, Q
+VARIABLES S_active, O_func, O_data, O_na, S, Q
 
 \* Переменные модели:
 \* V \subseteq S_active x O_func x O_data x O_na
@@ -14,7 +14,7 @@ VARIABLES S_active, O_func, O_data, O_na, S, O, Q
 \*
 \* Q \subseteq S x O x E
 \*   - последовательность запросов к системе в реализации
-vars == <<S_active, O_func, O_data, O_na, S, O, Q>>
+vars == <<S_active, O_func, O_data, O_na, S, Q>>
 
 \* Модельные значение
 

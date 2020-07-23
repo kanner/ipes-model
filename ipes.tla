@@ -1,5 +1,5 @@
 --------------------------------- MODULE ipes ---------------------------------
-EXTENDS init, types
+EXTENDS init, types, select
 -------------------------------------------------------------------------------
 
 \* CreateProcessD
@@ -89,11 +89,12 @@ ReadD ==
 \* WriteD
 \* Реализация информационного потока на запись
 Write(s,o,o_w) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, O, Q>>
+        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+
 WriteD ==
         \E s \in S:
-        \E o \in O:
-        \E o_w \in O:
+        \E o \in SelectObjects:
+        \E o_w \in SelectObjects:
 
             \* Постусловия
             /\ Write(s,o,o_w)
@@ -101,11 +102,12 @@ WriteD ==
 \* CreateD
 \* Реализация информационного потока на создание объекта
 Create(s,o,o_c) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, O, Q>>
+        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+
 CreateD ==
         \E s \in S:
-        \E o \in O:
-        \E o_c \in O:
+        \E o \in SelectObjects:
+        \E o_c \in SelectObjects:
 
             \* Постусловия
             /\ Create(s,o,o_c)
@@ -113,11 +115,12 @@ CreateD ==
 \* DeleteD
 \* Реализация информационного потока на удаление объекта
 Delete(s,o,o_d) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, O, Q>>
+        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+
 DeleteD ==
         \E s \in S:
-        \E o \in O:
-        \E o_d \in O:
+        \E o \in SelectObjects:
+        \E o_d \in SelectObjects:
 
             \* Постусловия
             /\ Delete(s,o,o_d)
@@ -126,20 +129,24 @@ DeleteD ==
 
 \* SormInitD
 \* Инициализации подсистемы управления доступом
-SormInit(s,o,o_sorm) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, O, Q>>
+SormInit(s,o,o_n) ==
+        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+
 SormInitD ==
         \E s \in S:
-        \E o \in O:
-        \E o_sorm \in O:
+        \E o \in SelectObjects:
+        \E o_n \in SelectObjects:
+
+            \* TODO - аналог CreateShadowD только для типа "sorm"
 
             \* Постусловия
-            /\ SormInit(s,o,o_sorm)
+            /\ SormInit(s,o,o_n(*o_sorm*))
 
 \* SormBlockSubjectD
 \* Изменение блокировки субъекта (разрешенный / неразрешенный)
 SormBlockSubject(s,s_b) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, O, Q>>
+        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+
 SormBlockSubjectD ==
         \E s \in S:
         \E s_b \in S:
@@ -150,11 +157,12 @@ SormBlockSubjectD ==
 \* SormChangePermD
 \* Изменение правил доступа
 SormChangePerm(s,s_a,o_a) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, O, Q>>
+        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+
 SormChangePermD ==
         \E s \in S:
         \E s_a \in S:
-        \E o_a \in O:
+        \E o_a \in SelectObjects:
 
             \* Постусловия
             /\ SormChangePerm(s,s_a,o_a)
@@ -168,7 +176,6 @@ TypeInv == /\ S_active \subseteq Subjects
            /\ O_data \subseteq Objects
            /\ O_na \subseteq Objects
            /\ S \subseteq Subjects
-           /\ O \subseteq Objects
 
 -------------------------------------------------------------------------------
 
@@ -178,7 +185,6 @@ Init == /\ S_active = {s_0, s_sorm}
         /\ O_func = {o_0, o_s}
         /\ O_data = {} (*o_sorm*)
         /\ O_na = {}
-        /\ O = {o0}
         /\ S = {s_2}
         /\ Q = {}
 
