@@ -1,5 +1,5 @@
 --------------------------------- MODULE ipes ---------------------------------
-EXTENDS init, types, select
+EXTENDS init, types, select, sorm
 -------------------------------------------------------------------------------
 
 \* CreateProcessD
@@ -56,11 +56,14 @@ CreateUserD ==
         \E o \in SelectSubjProc(s):
         \E s_u \in SelectSubjAvail: \* TODO: множество сессий?
 
-            \* TODO: \/ s = s0
+            \* TODO: \/ s = s_0
             \*       \/ s.type = "users"
 
-            \* новый субъект типа "users"
+            \* Новый субъект типа "users"
             /\ s_u.type = "users"
+
+            \* Правила порождения s_sorm
+            /\ SormCheckCreate(s)
 
             \* Нельзя порождать из последнего процесса
             /\ Cardinality(SelectSubjProc(s)) > 1
@@ -81,11 +84,14 @@ CreateShadowD ==
         \E o \in SelectSubjProc(s):
         \E s_w \in SelectSubjAvail:
 
-            \* порождение может выполнять только субъект s0
+            \* Порождение может выполнять только субъект s_0
             /\ s.sid = s_0.sid
 
-            \* новый субъект типа "system"
-            /\ s_w.type = "system"
+            \* Новый субъект типа "system" или "sorm"
+            /\ s_w.type \in {"system", "sorm"}
+
+            \* Правила порождения s_sorm
+            /\ SormCheckCreate(s)
 
             \* Нельзя порождать из последнего процесса
             /\ Cardinality(SelectSubjProc(s)) > 1
@@ -96,13 +102,13 @@ CreateShadowD ==
 \* DeleteSubjectD
 \* Уничтожение всех функционально ассоциированных объектов
 DeleteSubject(s,o) ==
-        \* для всех процессов выполняется DeleteProcess()
+        \* Для всех процессов выполняется DeleteProcess()
         /\ \A proc \in SelectSubjProc(s):
             /\ O_func' = O_func \ {proc}
-            \* объекты-данные перестают быть ассоциированными
+            \* Объекты-данные перестают быть ассоциированными
         /\  \/  /\ Cardinality(SelectSubjData(s)) > 0
                 /\ \A d \in SelectSubjData(s):
-                        \* неассоциированный объект должен перейти в O_na
+                        \* Неассоциированный объект должен перейти в O_na
                     /\  \/  /\ Cardinality(d.subj_assoc) = 1
                             /\ O_data' = O_data \ {d}
                             /\ O_na' = O_na \cup
@@ -110,7 +116,7 @@ DeleteSubject(s,o) ==
                                   type |-> "na",
                                   subj_assoc |-> {},
                                   state |-> d.state]}
-                        \* из ассоциированных объектов исключается s.sid
+                        \* Из ассоциированных объектов исключается s.sid
                         \/  /\ Cardinality(d.subj_assoc) > 1
                             /\ O_data' = (O_data \ {d}) \cup
                                 {[ d EXCEPT!["subj_assoc"]=
@@ -126,7 +132,7 @@ DeleteSubjectD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
 
-            \* s0, s_sorm не могут уничтожиться после активизации
+            \* s_0, s_sorm не могут уничтожиться после активизации
             /\ s.sid # s_0.sid
             /\ s.sid # s_sorm.sid
 
@@ -136,11 +142,11 @@ DeleteSubjectD ==
 \* ExecD
 \* Загрузка бинарного образа для выполнения
 Exec(s,o,o_e) ==
-        \* бинарный файл загружается в процесс
+        \* Бинарный файл загружается в процесс
         /\ O_func' = (O_func \ {o}) \cup
                 {[ o EXCEPT!["state"]=
                     o_e.state]}
-            \* объект перестает быть ассоциированным и переходит в O_na
+            \* Объект перестает быть ассоциированным и переходит в O_na
         /\  \/  /\ Cardinality(o_e.subj_assoc) = 1
                 /\ O_data' = O_data \ {o_e}
                 /\ O_na' = O_na \cup
@@ -148,7 +154,7 @@ Exec(s,o,o_e) ==
                       type |-> "na",
                       subj_assoc |-> {},
                       state |-> o_e.state]}
-            \* из ассоциированного объекта исключается s.sid
+            \* Из ассоциированного объекта исключается s.sid
             \/  /\ Cardinality(o_e.subj_assoc) > 1
                 /\ O_data' = (O_data \ {o_e}) \cup
                     {[ o_e EXCEPT!["subj_assoc"]=
@@ -163,7 +169,8 @@ ExecD ==
         \* Объект уже прочитан
         \E o_e \in SelectSubjData(s):
 
-            \* TODO: ПРД s_sorm
+            \* Правила доступа s_sorm
+            /\ SormCheckPerm(s)
 
             \* Постусловия
             /\ Exec(s,o,o_e)
@@ -171,11 +178,11 @@ ExecD ==
 \* ReadD
 \* Реализация информационного потока на чтение
 Read(s,o,o_r) ==
-        \* процесс читает данные и изменяет свое состояние
+        \* Процесс читает данные и изменяет свое состояние
         /\ O_func' = (O_func \ {o}) \cup
                 {[ o EXCEPT!["state"]=
                     RandomElement(1..ObjectStateMax)]}
-        \* объект с данными становится ассоциированным
+        \* Объект с данными становится ассоциированным
         /\ O_data' = (O_data \ {o_r}) \cup
             {[oid |-> o_r.oid,
               type |-> "data",
@@ -190,10 +197,11 @@ ReadD ==
         \E o \in SelectSubjProc(s):
         \E o_r \in SelectObjects \ O_func:
 
-            \* процесс может читать если есть данные
+            \* Процесс может читать если есть данные
             o_r.state # 0
 
-            \* TODO: ПРД s_sorm
+            \* Правила доступа s_sorm
+            /\ SormCheckPerm(s)
 
             \* Постусловия
             /\ Read(s,o,o_r)
@@ -201,7 +209,7 @@ ReadD ==
 \* WriteD
 \* Реализация информационного потока на запись
 Write(s,o,o_w) ==
-        \* изменяется состояние объекта
+        \* Изменяется состояние объекта
         /\  \/  /\ o_w \in O_na
                 /\ O_na' = (O_na \ {o_w}) \cup
                         {[ o_w EXCEPT!["state"]=
@@ -220,7 +228,8 @@ WriteD ==
         \E o \in SelectSubjProc(s):
         \E o_w \in SelectObjects \ O_func:
 
-            \* TODO: ПРД s_sorm
+            \* Правила доступа s_sorm
+            /\ SormCheckPerm(s)
 
             \* Постусловия
             /\ Write(s,o,o_w)
@@ -245,7 +254,8 @@ CreateD ==
             \* Выбор свободного идентификатора
             /\ \A obj \in SelectObjects: obj.oid # x
 
-            \* TODO: ПРД s_sorm
+            \* Правила доступа s_sorm
+            /\ SormCheckPerm(s)
 
             \* Постусловия
             /\ Create(s,o,x)
@@ -263,27 +273,13 @@ DeleteD ==
         \E o \in SelectSubjProc(s):
         \E o_d \in SelectObjects \ O_func:
 
-            \* TODO: ПРД s_sorm
+            \* Правила доступа s_sorm
+            /\ SormCheckPerm(s)
 
             \* Постусловия
             /\ Delete(s,o,o_d)
 
 -------------------------------------------------------------------------------
-
-\* SormInitD
-\* Инициализации подсистемы управления доступом
-SormInit(s,o,o_n) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
-
-SormInitD ==
-        \E s \in S:
-        \E o \in SelectObjects:
-        \E o_n \in SelectObjects:
-
-            \* TODO - аналог CreateShadowD только для типа "sorm"
-
-            \* Постусловия
-            /\ SormInit(s,o,o_n(*o_sorm*))
 
 \* SormBlockSubjectD
 \* Изменение блокировки субъекта (разрешенный / неразрешенный)
@@ -303,7 +299,7 @@ SormBlockSubjectD ==
             \* Административные действия выполняет только s_sorm
             /\ s.sid = s_sorm.sid
 
-            \* блокировать s_0 или s_sorm нельзя
+            \* Блокировать s_0 или s_sorm нельзя
             /\ s_b.sid # s_0.sid
             /\ s_b.sid # s_sorm.sid
 
@@ -356,7 +352,6 @@ Next ==
         \/ CreateD
         \/ DeleteD
         \* Административные действия
-        \/ SormInitD
         \/ SormBlockSubjectD
 
 \* Spec
