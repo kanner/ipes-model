@@ -5,6 +5,9 @@ EXTENDS TLC, Integers, types
 VARIABLES S_active, O_func, O_data, O_na, S, Q
 
 \* Переменные модели:
+\*
+\* S - множество субъектов модели ИПСС
+\*
 \* V \subseteq S_active x O_func x O_data x O_na
 \*   - последовательность состояний реализации модели, где:
 \* S_active - множество активных субъектов системы
@@ -38,12 +41,12 @@ s_2 ==      [sid        |-> 2,
 s_3 ==      [sid        |-> 3,
              type       |-> "users",
              is_blocked |-> FALSE]
-
+*)
 \* системный субъект
-s_4==      [sid        |-> 4,
+s_4==       [sid        |-> 4,
              type       |-> "system",
              is_blocked |-> FALSE]
-*)
+
 \* Начальные объекты системы
 \* o0 - процесс системного субъекта s0
 o_0 ==       [oid        |-> 0,
