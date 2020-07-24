@@ -167,11 +167,24 @@ ExecD ==
 \* ReadD
 \* Реализация информационного потока на чтение
 Read(s,o,o_r) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, O, Q>>
+        \* процесс читает данные и изменяет свое состояние
+        /\ O_func' = (O_func \ {o}) \cup
+                {[ o EXCEPT!["state"]=
+                    RandomElement(1..ObjectStateMax)]}
+        \* объект с данными становится ассоциированным
+        /\ O_data' = (O_data \ {o_r}) \cup
+            {[ o_r EXCEPT!["subj_assoc"]=
+                (o_r.subj_assoc \cup {s.sid})]}
+        /\ O_na' = O_na \ {o_r}
+        /\ Q' = Q \cup {<<s.sid,o.oid,o_r.oid,"read">>}
+        /\ UNCHANGED <<S_active, S>>
+
 ReadD ==
-        \E s \in S:
-        \E o \in O:
-        \E o_r \in O:
+        \E s \in S_active:
+        \E o \in SelectSubjProc(s):
+        \E o_r \in SelectObjects \ O_func:
+
+            \* TODO: ПРД s_sorm
 
             \* Постусловия
             /\ Read(s,o,o_r)
@@ -179,38 +192,69 @@ ReadD ==
 \* WriteD
 \* Реализация информационного потока на запись
 Write(s,o,o_w) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+        \* изменяется состояние объекта
+        /\  \/  /\ o_w \in O_na
+                /\ O_na' = (O_na \ {o_w}) \cup
+                        {[ o_w EXCEPT!["state"]=
+                            RandomElement(1..ObjectStateMax)]}
+                /\ O_data' = O_data
+            \/  /\ o_w \in O_data
+                /\ O_data' = (O_data \ {o_w}) \cup
+                        {[ o_w EXCEPT!["state"]=
+                            RandomElement(1..ObjectStateMax)]}
+                /\ O_na' = O_na
+        /\ Q' = Q \cup {<<s.sid,o.oid,o_w.oid,"write">>}
+        /\ UNCHANGED <<S_active, O_func, S>>
 
 WriteD ==
-        \E s \in S:
-        \E o \in SelectObjects:
-        \E o_w \in SelectObjects:
+        \E s \in S_active:
+        \E o \in SelectSubjProc(s):
+        \E o_w \in SelectObjects \ O_func:
+
+            \* TODO: ПРД s_sorm
 
             \* Постусловия
             /\ Write(s,o,o_w)
 
 \* CreateD
 \* Реализация информационного потока на создание объекта
-Create(s,o,o_c) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+Create(s,o,x) ==
+        /\ O_na' = O_na \cup {[oid |-> x,
+                               type |-> "na",
+                               subj_assoc |-> {},
+                               \* изначально состояние пустое
+                               state |-> 0]}
+        /\ Q' = Q \cup {<<s.sid,o.oid,x,"create">>}
+        /\ UNCHANGED <<S_active, O_func, O_data, S>>
 
 CreateD ==
-        \E s \in S:
-        \E o \in SelectObjects:
-        \E o_c \in SelectObjects:
+        \E s \in S_active:
+        \E o \in SelectSubjProc(s):
+
+        \E x \in ObjectIDs:
+
+            \* Выбор свободного идентификатора
+            /\ \A obj \in SelectObjects: obj.oid # x
+
+            \* TODO: ПРД s_sorm
 
             \* Постусловия
-            /\ Create(s,o,o_c)
+            /\ Create(s,o,x)
 
 \* DeleteD
 \* Реализация информационного потока на удаление объекта
 Delete(s,o,o_d) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+        /\ O_na' = O_na \ {o_d}
+        /\ O_data' = O_data \ {o_d}
+        /\ Q' = Q \cup {<<s.sid,o.oid,o_d.oid,"delete">>}
+        /\ UNCHANGED <<S_active, O_func, S>>
 
 DeleteD ==
-        \E s \in S:
-        \E o \in SelectObjects:
-        \E o_d \in SelectObjects:
+        \E s \in S_active:
+        \E o \in SelectSubjProc(s):
+        \E o_d \in SelectObjects \ O_func:
+
+            \* TODO: ПРД s_sorm
 
             \* Постусловия
             /\ Delete(s,o,o_d)
