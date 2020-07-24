@@ -3,11 +3,11 @@ EXTENDS Integers, FiniteSets
 -------------------------------------------------------------------------------
 
 \* Множества идентификаторов
-SubjectIDs  == 0..4
+SubjectIDs  == 0..3
 ObjectIDs   == 0..2 \* TODO: 5+
 
 \* Модельные значения состояний объектов
-ObjectStates == 0..5
+ObjectStates == 0..2 \* TODO: 5
 ObjectStateMax == Cardinality(ObjectStates) - 1
 
 \* Типы сущностей системы

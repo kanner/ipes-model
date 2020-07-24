@@ -330,11 +330,11 @@ SormExists ==
 
 \* Init
 \* Инициализация модели
-Init == /\ S_active = {s_0, s_sorm}
-        /\ O_func = {o_0, o_s}
-        /\ O_data = {} (*o_sorm*)
-        /\ O_na = {}
-        /\ S = {s_0, s_sorm, s_2, s_4}
+Init == /\ S_active = {s_0}
+        /\ O_func = {o_0}
+        /\ O_data = {}
+        /\ O_na = {o_sorm}
+        /\ S = {s_0, s_sorm, s_2, s_3}
         /\ Q = {}
 
 \* Next
