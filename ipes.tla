@@ -321,10 +321,13 @@ TypeInv ==  /\ S_active \subseteq Subjects
 OSKernelExists ==
             /\ s_0 \in S_active
 
-\* SormExists
-\* В любой момент времени существует s_sorm
-SormExists ==
-            /\ s_sorm \in S_active
+\* SormInits
+\* В начальный момент времени инициализирован s_sorm
+\* либо функционирует только s_0
+SormInits ==
+            /\  \/  /\ s_sorm \in S_active
+                \/  /\ s_sorm \notin S_active
+                    /\ S_active = {s_0}
 
 -------------------------------------------------------------------------------
 
@@ -362,6 +365,6 @@ Spec == Init /\ [][Next]_vars
 \* Теорема, учитывающая инварианты: доказывается при верификации
 THEOREM Spec => /\ []TypeInv
                 /\ []OSKernelExists
-                /\ []SormExists
+                /\ []SormInits
 
 ===============================================================================
