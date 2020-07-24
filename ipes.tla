@@ -261,11 +261,21 @@ SormChangePermD ==
 
 \* Type Invariant
 \* Инвариант типов
-TypeInv == /\ S_active \subseteq Subjects
-           /\ O_func \subseteq Objects
-           /\ O_data \subseteq Objects
-           /\ O_na \subseteq Objects
-           /\ S \subseteq Subjects
+TypeInv ==  /\ S_active \subseteq Subjects
+            /\ O_func \subseteq Objects
+            /\ O_data \subseteq Objects
+            /\ O_na \subseteq Objects
+            /\ S \subseteq Subjects
+
+\* OSKernelExists
+\* В любой момент времени существует s_0
+OSKernelExists ==
+            /\ s_0 \in S_active
+
+\* SormExists
+\* В любой момент времени существует s_sorm
+SormExists ==
+            /\ s_sorm \in S_active
 
 -------------------------------------------------------------------------------
 
@@ -304,5 +314,7 @@ Spec == Init /\ [][Next]_vars
 \* Invariants
 \* Теорема, учитывающая инварианты: доказывается при верификации
 THEOREM Spec => /\ []TypeInv
+                /\ []OSKernelExists
+                /\ []SormExists
 
 ===============================================================================
