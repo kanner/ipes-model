@@ -106,8 +106,10 @@ DeleteSubject(s,o) ==
                     /\  \/  /\ Cardinality(d.subj_assoc) = 1
                             /\ O_data' = O_data \ {d}
                             /\ O_na' = O_na \cup
-                                {[ d EXCEPT!["subj_assoc"]=
-                                    {}]}
+                                {[oid |-> d.oid,
+                                  type |-> "na",
+                                  subj_assoc |-> {},
+                                  state |-> d.state]}
                         \* из ассоциированных объектов исключается s.sid
                         \/  /\ Cardinality(d.subj_assoc) > 1
                             /\ O_data' = (O_data \ {d}) \cup
@@ -142,8 +144,10 @@ Exec(s,o,o_e) ==
         /\  \/  /\ Cardinality(o_e.subj_assoc) = 1
                 /\ O_data' = O_data \ {o_e}
                 /\ O_na' = O_na \cup
-                    {[ o_e EXCEPT!["subj_assoc"]=
-                        {}]}
+                    {[oid |-> o_e.oid,
+                      type |-> "na",
+                      subj_assoc |-> {},
+                      state |-> o_e.state]}
             \* из ассоциированного объекта исключается s.sid
             \/  /\ Cardinality(o_e.subj_assoc) > 1
                 /\ O_data' = (O_data \ {o_e}) \cup
@@ -173,8 +177,10 @@ Read(s,o,o_r) ==
                     RandomElement(1..ObjectStateMax)]}
         \* объект с данными становится ассоциированным
         /\ O_data' = (O_data \ {o_r}) \cup
-            {[ o_r EXCEPT!["subj_assoc"]=
-                (o_r.subj_assoc \cup {s.sid})]}
+            {[oid |-> o_r.oid,
+              type |-> "data",
+              subj_assoc |-> (o_r.subj_assoc \cup {s.sid}),
+              state |-> o_r.state]}
         /\ O_na' = O_na \ {o_r}
         /\ Q' = Q \cup {<<s.sid,o.oid,o_r.oid,"read">>}
         /\ UNCHANGED <<S_active, S>>
