@@ -310,19 +310,6 @@ SormBlockSubjectD ==
             \* Постусловия
             /\ SormBlockSubject(s,o,s_b)
 
-\* SormChangePermD
-\* Изменение правил доступа
-SormChangePerm(s,s_a,o_a) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
-
-SormChangePermD ==
-        \E s \in S:
-        \E s_a \in S:
-        \E o_a \in SelectObjects:
-
-            \* Постусловия
-            /\ SormChangePerm(s,s_a,o_a)
-
 -------------------------------------------------------------------------------
 
 \* Type Invariant
@@ -371,7 +358,6 @@ Next ==
         \* Административные действия
         \/ SormInitD
         \/ SormBlockSubjectD
-        \/ SormChangePermD
 
 \* Spec
 \* Спецификация модели
