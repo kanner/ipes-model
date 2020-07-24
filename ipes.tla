@@ -54,7 +54,7 @@ CreateUser(s,o,s_u) ==
 CreateUserD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
-        \E s_u \in S \ S_active: \* TODO: множество сессий?
+        \E s_u \in SelectSubjAvail: \* TODO: множество сессий?
 
             \* TODO: \/ s = s0
             \*       \/ s.type = "users"
@@ -79,7 +79,7 @@ CreateShadow(s,o,s_w) ==
 CreateShadowD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
-        \E s_w \in S \ S_active:
+        \E s_w \in SelectSubjAvail:
 
             \* порождение может выполнять только субъект s0
             /\ s.sid = s_0.sid
@@ -287,15 +287,28 @@ SormInitD ==
 
 \* SormBlockSubjectD
 \* Изменение блокировки субъекта (разрешенный / неразрешенный)
-SormBlockSubject(s,s_b) ==
-        /\ UNCHANGED <<S_active, O_func, O_data, O_na, S, Q>>
+SormBlockSubject(s,o,s_b) ==
+        /\ S' = (S \ {s_b}) \cup
+            {[ s_b EXCEPT!["is_blocked"]= (\neg s_b.is_blocked) ]}
+        /\ Q' = Q \cup {<<s.sid,o.oid,s_b.sid,"change_blocked">>}
+        /\ UNCHANGED <<S_active, O_func, O_data, O_na>>
 
 SormBlockSubjectD ==
-        \E s \in S:
-        \E s_b \in S:
+        \E s \in S_active:
+        \E o \in SelectSubjProc(s):
+        \* для уменьшения возможных состояний блокировать можно
+        \* только неактивного пользователя
+        \E s_b \in S \ S_active:
+
+            \* Административные действия выполняет только s_sorm
+            /\ s.sid = s_sorm.sid
+
+            \* блокировать s_0 или s_sorm нельзя
+            /\ s_b.sid # s_0.sid
+            /\ s_b.sid # s_sorm.sid
 
             \* Постусловия
-            /\ SormBlockSubject(s,s_b)
+            /\ SormBlockSubject(s,o,s_b)
 
 \* SormChangePermD
 \* Изменение правил доступа
