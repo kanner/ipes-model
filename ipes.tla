@@ -184,6 +184,9 @@ ReadD ==
         \E o \in SelectSubjProc(s):
         \E o_r \in SelectObjects \ O_func:
 
+            \* процесс может читать если есть данные
+            o_r.state # 0
+
             \* TODO: ПРД s_sorm
 
             \* Постусловия
