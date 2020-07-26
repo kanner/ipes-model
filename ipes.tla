@@ -170,7 +170,7 @@ ExecD ==
         \E o_e \in SelectSubjData(s):
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s)
+            /\ SormCheckPerm(s,o_e.oid,"exec")
 
             \* Постусловия
             /\ Exec(s,o,o_e)
@@ -201,7 +201,7 @@ ReadD ==
             o_r.state # 0
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s)
+            /\ SormCheckPerm(s,o_r.oid,"read")
 
             \* Постусловия
             /\ Read(s,o,o_r)
@@ -229,7 +229,7 @@ WriteD ==
         \E o_w \in SelectObjects \ O_func:
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s)
+            /\ SormCheckPerm(s,o_w.oid,"write")
 
             \* Постусловия
             /\ Write(s,o,o_w)
@@ -255,7 +255,7 @@ CreateD ==
             /\ \A obj \in SelectObjects: obj.oid # x
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s)
+            /\ SormCheckPerm(s,x,"create")
 
             \* Постусловия
             /\ Create(s,o,x)
@@ -274,7 +274,7 @@ DeleteD ==
         \E o_d \in SelectObjects \ O_func:
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s)
+            /\ SormCheckPerm(s,o_d.oid,"delete")
 
             \* Постусловия
             /\ Delete(s,o,o_d)

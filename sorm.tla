@@ -20,10 +20,17 @@ SormCheckCreate(s) ==
     /\  s.is_blocked = FALSE
     \* дополнительные проверки (идентификация/аутентификация и т.д.)
 
-SormCheckPerm(s) ==
-    \* запрос разрешен s_0
-    /\  \/  /\ s.sid = s_0.sid
-    \* либо должен быть активизирован s_sorm
-        \/  /\ SormInitialized
+SormCheckPerm(s,oid,r) ==
+    \* запрос разрешен s_0 и s_sorm
+    /\  \/ s.sid \in {s_0.sid, s_sorm.sid}
+        \* либо должен быть активизирован s_sorm
+        \/ SormInitialized
+    \* запросы к o_sorm может совершать только s_sorm
+    /\  \/  /\ oid = o_sorm.oid
+            /\ s.sid = s_sorm.sid
+            \* удалять или исполнять o_sorm нельзя
+            /\ r \notin {"exec","create","delete"}
+        \/  oid # o_sorm.oid
+            \* дополнительные проверки (правила доступа и т.д.)
 
 ===============================================================================
