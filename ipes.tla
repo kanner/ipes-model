@@ -56,14 +56,14 @@ CreateUserD ==
         \E o \in SelectSubjProc(s):
         \E s_u \in SelectSubjAvail: \* TODO: множество сессий?
 
-            \* TODO: \/ s = s_0
+            \* TODO: \/ s.sid = s_0.sid
             \*       \/ s.type = "users"
 
             \* Новый субъект типа "users"
             /\ s_u.type = "users"
 
             \* Правила порождения s_sorm
-            /\ SormCheckCreate(s)
+            /\ SormCheckCreate(s_u)
 
             \* Нельзя порождать из последнего процесса
             /\ Cardinality(SelectSubjProc(s)) > 1
@@ -91,7 +91,7 @@ CreateShadowD ==
             /\ s_w.type \in {"system", "sorm"}
 
             \* Правила порождения s_sorm
-            /\ SormCheckCreate(s)
+            /\ SormCheckCreate(s_w)
 
             \* Нельзя порождать из последнего процесса
             /\ Cardinality(SelectSubjProc(s)) > 1
