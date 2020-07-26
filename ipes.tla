@@ -54,7 +54,7 @@ CreateUser(s,o,s_u) ==
 CreateUserD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
-        \E s_u \in SelectSubjAvail: \* TODO: множество сессий?
+        \E s_u \in (S \ S_active): \* TODO: множество сессий?
 
             \* TODO: \/ s.sid = s_0.sid
             \*       \/ s.type = "users"
@@ -82,7 +82,7 @@ CreateShadow(s,o,s_w) ==
 CreateShadowD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
-        \E s_w \in SelectSubjAvail:
+        \E s_w \in (S \ S_active):
 
             \* Порождение может выполнять только субъект s_0
             /\ s.sid = s_0.sid
