@@ -316,18 +316,49 @@ TypeInv ==  /\ S_active \subseteq Subjects
             /\ O_na \subseteq Objects
             /\ S \subseteq Subjects
 
+\* ObjectsConsistency Invariant
+\* Инвариант консистентности множеств объектов
+ObjectsConsistencyInv ==
+    /\ \A proc \in O_func:
+        \* объект м.б. функционально ассоциирован только с одним субъектом
+        /\ Cardinality(proc.subj_assoc) = 1
+        /\ \E subj \in S_active: proc.subj_assoc = {subj.sid}
+        \* объект не может состоять в другом множестве
+        /\ proc \notin O_data \cup O_na
+    /\ \A data \in O_data:
+        \* объект м.б. ассоциирован как данные с несколькими субъектами
+        /\ Cardinality(data.subj_assoc) >= 1
+        /\ \E subj \in S_active: subj.sid \in data.subj_assoc
+        /\ data \notin O_func \cup O_na
+    /\ \A obj \in O_na:
+        \* объект м.б. не ассоциирован ни с одним субъектом
+        /\ Cardinality(obj.subj_assoc) = 0
+        /\ obj \notin O_func \cup O_data
+
+\* Blocked Invariant
+\* Неразрешенные субъекты не могут быть активными и
+\* иметь ассоциированные объекты
+BlockedInv ==
+    \A s \in S:
+        /\  \/  /\ s.is_blocked = TRUE
+                /\ s \notin S_active
+                /\ ~\E o \in SelectObjects: s.sid \in o.subj_assoc
+            \/ s.is_blocked = FALSE
+
 \* OSKernelExists
 \* В любой момент времени существует s_0
 OSKernelExists ==
-            /\ s_0 \in S_active
+    /\ s_0 \in S_active
+    /\ s_0.is_blocked = FALSE
 
 \* SormInits
 \* В начальный момент времени инициализирован s_sorm
 \* либо функционирует только s_0
 SormInits ==
-            /\  \/  /\ s_sorm \in S_active
-                \/  /\ s_sorm \notin S_active
-                    /\ S_active = {s_0}
+    /\  \/  /\ s_sorm \in S_active
+            /\ s_sorm.is_blocked = FALSE
+        \/  /\ s_sorm \notin S_active
+            /\ S_active = {s_0}
 
 -------------------------------------------------------------------------------
 
@@ -364,6 +395,8 @@ Spec == Init /\ [][Next]_vars
 \* Invariants
 \* Теорема, учитывающая инварианты: доказывается при верификации
 THEOREM Spec => /\ []TypeInv
+                /\ []ObjectsConsistencyInv
+                /\ []BlockedInv
                 /\ []OSKernelExists
                 /\ []SormInits
 
