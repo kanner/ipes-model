@@ -1,0 +1,39 @@
+diff --git a/tlatex.sty b/tlatex.sty
+index 9fcedbb..e643428 100644
+--- a/tla2tex/tlatex.sty
++++ b/tla2tex/tlatex.sty
+@@ -1,11 +1,14 @@
+ \usepackage{latexsym}
+ \usepackage{ifthen}
+-% \usepackage{color}
++\usepackage{color}
++\usepackage[T2A]{fontenc}
++\usepackage[utf8]{inputenc}
++\usepackage[russian, english]{babel}
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ % SWITCHES                                                                  %
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \newboolean{shading} 
+-\setboolean{shading}{false}
++\setboolean{shading}{true}
+ \makeatletter
+  %% this is needed only when inserted into the file, not when
+  %% used as a package file.
+@@ -343,7 +346,7 @@
+ \def\graymargin{1}
+   % The number of points of margin in the shaded box.
+ 
+-% \definecolor{boxshade}{gray}{.85}
++\definecolor{boxshade}{gray}{.85}
+ % Defines the darkness of the shading: 1 = white, 0 = black
+ % Added by TLATeX only if needed.
+ 
+@@ -778,7 +781,7 @@
+ %   \tdash:    ~
+ %   \ceqdash:  =
+ %   \usdash:   _
+-\newcommand{\cdash}[1]{\raisedDash{#1}{.5}{.04}}
++\renewcommand{\cdash}[1]{\raisedDash{#1}{.5}{.04}}
+ \newcommand{\usdash}[1]{\raisedDash{#1}{0}{.04}}
+ \newcommand{\ceqdash}[1]{\raisedDash{#1}{.5}{.08}}
+ \newcommand{\tdash}[1]{\raisedDash{#1}{1}{.08}}
