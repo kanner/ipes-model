@@ -19,12 +19,15 @@ ObjTypes == {"func","data","na"}
 \* Субъекты доступа
 Subjects == [sid: SubjectIDs,
              type: SubjTypes,
+             \* заблокирован, не зарегистрирован
              is_blocked: BOOLEAN]
 
 \* Объекты доступа
 Objects  == [oid: ObjectIDs,
              type: ObjTypes,
+             \* субъект, с которым ассоциирован
              subj_assoc: SUBSET SubjectIDs,
+             \* [o] - состояние объекта, 0 - пустой объект
              state: ObjectStates]
 
 ===============================================================================
