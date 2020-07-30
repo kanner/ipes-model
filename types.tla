@@ -38,9 +38,9 @@ Objects  == [oid: ObjectIDs,
              state: ObjectStates]
 
 \* Запросы к системе
-Queries  == [sid: SubjectIDs,
-             pid: ObjectIDs,
-             osid: ObjectIDs \cup SubjectIDs,
+Queries  == [subj: Subjects,
+             proc: Objects,
+             dent: Objects \cup Subjects,
              type: QueryTypes]
 
 ===============================================================================

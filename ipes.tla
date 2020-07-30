@@ -10,8 +10,9 @@ CreateProcess(s,o,x) ==
                                    subj_assoc |-> {s.sid},
                                    \* форк наследует состояние
                                    state |-> o.state]}
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> x,
-                                     type |-> "create_process"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> (CHOOSE f \in O_func': f.oid = x),
+                           type |-> "create_process"])
         /\ UNCHANGED <<S_active, O_data, O_na, S>>
 
 CreateProcessD ==
@@ -31,8 +32,9 @@ CreateProcessD ==
 \* Уничтожение функционально ассоциированного объекта
 DeleteProcess(s,o) ==
         /\ O_func' = O_func \ {o}
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> o.oid,
-                                     type |-> "delete_process"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> o,
+                           type |-> "delete_process"])
         /\ UNCHANGED <<S_active, O_data, O_na, S>>
 
 DeleteProcessD ==
@@ -50,8 +52,9 @@ DeleteProcessD ==
 CreateUser(s,o,s_u) ==
         /\ S_active' = S_active \cup {s_u}
         /\ O_func' = (O_func \ {o}) \cup {[ o EXCEPT!["subj_assoc"]= {s_u.sid}]}
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> s_u.sid,
-                                     type |-> "create_user"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> s_u,
+                           type |-> "create_user"])
         /\ UNCHANGED <<O_data, O_na, S>>
 
 CreateUserD ==
@@ -79,8 +82,9 @@ CreateUserD ==
 CreateShadow(s,o,s_w) ==
         /\ S_active' = S_active \cup {s_w}
         /\ O_func' = (O_func \ {o}) \cup {[ o EXCEPT!["subj_assoc"]= {s_w.sid}]}
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> s_w.sid,
-                                     type |-> "create_shadow"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> s_w,
+                           type |-> "create_shadow"])
         /\ UNCHANGED <<O_data, O_na, S>>
 
 CreateShadowD ==
@@ -129,8 +133,9 @@ DeleteSubject(s,o) ==
             \/  /\ O_data' = O_data
                 /\ O_na' = O_na
         /\ S_active' = S_active \ {s}
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> s.sid,
-                                     type |-> "delete_subject"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> s,
+                           type |-> "delete_subject"])
         /\ UNCHANGED <<S>>
 
 DeleteSubjectD ==
@@ -165,8 +170,9 @@ Exec(s,o,o_e) ==
                     {[ o_e EXCEPT!["subj_assoc"]=
                         (o_e.subj_assoc \ {s.sid})]}
                 /\ O_na' = O_na
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> o_e.oid,
-                                     type |-> "exec"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> o_e,
+                           type |-> "exec"])
         /\ UNCHANGED <<S_active, S>>
 
 ExecD ==
@@ -195,8 +201,9 @@ Read(s,o,o_r) ==
               subj_assoc |-> (o_r.subj_assoc \cup {s.sid}),
               state |-> o_r.state]}
         /\ O_na' = O_na \ {o_r}
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> o_r.oid,
-                                     type |-> "read"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> o_r,
+                           type |-> "read"])
         /\ UNCHANGED <<S_active, S>>
 
 ReadD ==
@@ -227,8 +234,9 @@ Write(s,o,o_w) ==
                         {[ o_w EXCEPT!["state"]=
                             RandomElement(1..ObjectStateMax)]}
                 /\ O_na' = O_na
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> o_w.oid,
-                                     type |-> "write"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> o_w,
+                           type |-> "write"])
         /\ UNCHANGED <<S_active, O_func, S>>
 
 WriteD ==
@@ -250,8 +258,9 @@ Create(s,o,x) ==
                                subj_assoc |-> {},
                                \* изначально состояние пустое
                                state |-> 0]}
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> x,
-                                     type |-> "create"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> (CHOOSE d \in O_na': d.oid = x),
+                           type |-> "create"])
         /\ UNCHANGED <<S_active, O_func, O_data, S>>
 
 CreateD ==
@@ -274,8 +283,9 @@ CreateD ==
 Delete(s,o,o_d) ==
         /\ O_na' = O_na \ {o_d}
         /\ O_data' = O_data \ {o_d}
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> o_d.oid,
-                                     type |-> "delete"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> o_d,
+                           type |-> "delete"])
         /\ UNCHANGED <<S_active, O_func, S>>
 
 DeleteD ==
@@ -296,8 +306,9 @@ DeleteD ==
 SormBlockSubject(s,o,s_b) ==
         /\ S' = (S \ {s_b}) \cup
             {[ s_b EXCEPT!["is_blocked"]= (\neg s_b.is_blocked) ]}
-        /\ Q' = Append(Q, [sid |-> s.sid, pid |-> o.oid, osid |-> s_b.sid,
-                                     type |-> "change_blocked"])
+        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                           dent |-> s_b,
+                           type |-> "change_blocked"])
         /\ UNCHANGED <<S_active, O_func, O_data, O_na>>
 
 SormBlockSubjectD ==

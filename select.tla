@@ -11,7 +11,11 @@ SelectSubjProc(s) == { o \in O_func: s.sid \in o.subj_assoc }
 \* ассоциированные объекты-данные субъекта
 SelectSubjData(s) == { o \in O_data: s.sid \in o.subj_assoc }
 
-\* выбор последнего совершенного запроса
+\* выбор последнего совершенного запроса и его параметров
 SelectPrevQuery(Sq) == Sq[Len(Sq)]
+SelectPrevQuerySubj(Sq) == SelectPrevQuery(Sq).subj
+SelectPrevQueryProc(Sq) == SelectPrevQuery(Sq).proc
+SelectPrevQueryDent(Sq) == SelectPrevQuery(Sq).dent
+SelectPrevQueryType(Sq) == SelectPrevQuery(Sq).type
 
 ===============================================================================
