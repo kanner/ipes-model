@@ -7,8 +7,9 @@ SubjectIDs  == 0..3
 ObjectIDs   == 0..3 \* TODO: 5+
 
 \* Модельные значения состояний объектов
-ObjectStates == 0..1 \* TODO: 5
-ObjectStateMax == Cardinality(ObjectStates) - 1
+\* 0 - объект менялся только единственным ассоциированным субъектом
+\* 1 - объект менялся кем-то еще
+ObjectStates == 0..1
 
 \* Типы сущностей системы
 SubjTypes == {"users","system","sorm"}

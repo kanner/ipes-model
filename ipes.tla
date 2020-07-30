@@ -193,7 +193,7 @@ Read(s,o,o_r) ==
         \* Процесс читает данные и изменяет свое состояние
         /\ O_func' = (O_func \ {o}) \cup
                 {[ o EXCEPT!["state"]=
-                    RandomElement(1..ObjectStateMax)]}
+                    o_r.state]}
         \* Объект с данными становится ассоциированным
         /\ O_data' = (O_data \ {o_r}) \cup
             {[oid |-> o_r.oid,
@@ -211,9 +211,6 @@ ReadD ==
         \E o \in SelectSubjProc(s):
         \E o_r \in SelectObjects \ O_func:
 
-            \* Процесс может читать если есть данные
-            o_r.state # 0
-
             \* Правила доступа s_sorm
             /\ SormCheckPerm(s,o_r.oid,"read")
 
@@ -226,13 +223,17 @@ Write(s,o,o_w) ==
         \* Изменяется состояние объекта
         /\  \/  /\ o_w \in O_na
                 /\ O_na' = (O_na \ {o_w}) \cup
-                        {[ o_w EXCEPT!["state"]=
-                            RandomElement(1..ObjectStateMax)]}
+                        {[ o_w EXCEPT!["state"]= 0]}
                 /\ O_data' = O_data
             \/  /\ o_w \in O_data
-                /\ O_data' = (O_data \ {o_w}) \cup
-                        {[ o_w EXCEPT!["state"]=
-                            RandomElement(1..ObjectStateMax)]}
+                \* если еще с кем-то ассоциирован - изменим состояние
+                /\  \/  /\ o_w.subj_assoc # {s.sid}
+                        /\ O_data' = (O_data \ {o_w}) \cup
+                                {[ o_w EXCEPT!["state"]= 1]}
+                        \* запись в свои объекты не меняет состояния
+                    \/  /\ o_w.subj_assoc = {s.sid}
+                        /\ O_data' = (O_data \ {o_w}) \cup
+                                {[ o_w EXCEPT!["state"]= 0]}
                 /\ O_na' = O_na
         /\ Q' = Append(Q, [subj |-> s, proc |-> o,
                            dent |-> o_w,

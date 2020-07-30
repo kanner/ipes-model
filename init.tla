@@ -47,13 +47,13 @@ s_3==       [sid        |-> 3,
 o_0 ==       [oid        |-> 0,
              type       |-> "func",
              subj_assoc |-> {0},
-             state      |-> RandomElement(1..ObjectStateMax)]
+             state      |-> 0]
 
 \* o_sorm - ассоциированный объект-данные s_sorm модели ИПСС
 o_sorm ==   [oid        |-> 1,
              type       |-> "na",
              subj_assoc |-> {},
-             state      |-> RandomElement(1..ObjectStateMax)]
+             state      |-> 0]
 
 \* инициализирующий запрос
 q_0 ==      [subj        |-> s_0,
