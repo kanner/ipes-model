@@ -14,6 +14,13 @@ ObjectStateMax == Cardinality(ObjectStates) - 1
 SubjTypes == {"users","system","sorm"}
 ObjTypes == {"func","data","na"}
 
+\* Типы запросов к системе
+QueryTypes == {"change_blocked", "initial", \* только в начальном состоянии
+               "create_process", "delete_process",
+               "create_user", "create_shadow", "delete_subject",
+               "exec",
+               "read", "write", "create", "delete"}
+
 -------------------------------------------------------------------------------
 
 \* Субъекты доступа
@@ -29,5 +36,11 @@ Objects  == [oid: ObjectIDs,
              subj_assoc: SUBSET SubjectIDs,
              \* [o] - состояние объекта, 0 - пустой объект
              state: ObjectStates]
+
+\* Запросы к системе
+Queries  == [sid: SubjectIDs,
+             pid: ObjectIDs,
+             osid: ObjectIDs \cup SubjectIDs,
+             type: QueryTypes]
 
 ===============================================================================
