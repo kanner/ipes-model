@@ -52,7 +52,8 @@ DeleteProcessD ==
 CreateUser(s,o,s_u) ==
         /\ S_active' = S_active \cup {s_u}
         /\ O_func' = (O_func \ {o}) \cup {[ o EXCEPT!["subj_assoc"]= {s_u.sid}]}
-        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+        /\ Q' = Append(Q, [subj |-> s,
+                           proc |-> (CHOOSE f \in O_func': f.oid = o.oid),
                            dent |-> s_u,
                            type |-> "create_user"])
         /\ UNCHANGED <<O_data, O_na, S>>
@@ -82,7 +83,8 @@ CreateUserD ==
 CreateShadow(s,o,s_w) ==
         /\ S_active' = S_active \cup {s_w}
         /\ O_func' = (O_func \ {o}) \cup {[ o EXCEPT!["subj_assoc"]= {s_w.sid}]}
-        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+        /\ Q' = Append(Q, [subj |-> s,
+                           proc |-> (CHOOSE f \in O_func': f.oid = o.oid),
                            dent |-> s_w,
                            type |-> "create_shadow"])
         /\ UNCHANGED <<O_data, O_na, S>>
@@ -170,8 +172,10 @@ Exec(s,o,o_e) ==
                     {[ o_e EXCEPT!["subj_assoc"]=
                         (o_e.subj_assoc \ {s.sid})]}
                 /\ O_na' = O_na
-        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
-                           dent |-> o_e,
+        /\ Q' = Append(Q, [subj |-> s,
+                           proc |-> (CHOOSE f \in O_func': f.oid = o.oid),
+                           dent |-> (CHOOSE d \in O_data' \cup O_na':
+                                            d.oid = o_e.oid),
                            type |-> "exec"])
         /\ UNCHANGED <<S_active, S>>
 
@@ -201,8 +205,9 @@ Read(s,o,o_r) ==
               subj_assoc |-> (o_r.subj_assoc \cup {s.sid}),
               state |-> o_r.state]}
         /\ O_na' = O_na \ {o_r}
-        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
-                           dent |-> o_r,
+        /\ Q' = Append(Q, [subj |-> s,
+                           proc |-> (CHOOSE f \in O_func': f.oid = o.oid),
+                           dent |-> (CHOOSE d \in O_data': d.oid = o_r.oid),
                            type |-> "read"])
         /\ UNCHANGED <<S_active, S>>
 
@@ -236,7 +241,8 @@ Write(s,o,o_w) ==
                                 {[ o_w EXCEPT!["state"]= 0]}
                 /\ O_na' = O_na
         /\ Q' = Append(Q, [subj |-> s, proc |-> o,
-                           dent |-> o_w,
+                           dent |-> (CHOOSE d \in O_data' \cup O_na':
+                                            d.oid = o_w.oid),
                            type |-> "write"])
         /\ UNCHANGED <<S_active, O_func, S>>
 
@@ -308,7 +314,7 @@ SormBlockSubject(s,o,s_b) ==
         /\ S' = (S \ {s_b}) \cup
             {[ s_b EXCEPT!["is_blocked"]= (\neg s_b.is_blocked) ]}
         /\ Q' = Append(Q, [subj |-> s, proc |-> o,
-                           dent |-> s_b,
+                           dent |-> (CHOOSE su \in S': su.sid = s_b.sid),
                            type |-> "change_blocked"])
         /\ UNCHANGED <<S_active, O_func, O_data, O_na>>
 
