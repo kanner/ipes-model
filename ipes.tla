@@ -339,9 +339,9 @@ TypeInv ==  /\ S_active \subseteq Subjects
             /\ S \subseteq Subjects
             /\ SelectPrevQuery(Q) \in Queries
 
-\* ObjectsConsistency Invariant
-\* Инвариант консистентности множеств объектов
-ObjectsConsistencyInv ==
+\* Consistency Invariant
+\* Инвариант консистентности множеств сущностей системы
+ConsistencyInv ==
     /\ \A proc \in O_func:
         \* объект м.б. функционально ассоциирован только с одним субъектом
         /\ Cardinality(proc.subj_assoc) = 1
@@ -357,6 +357,11 @@ ObjectsConsistencyInv ==
         \* объект м.б. не ассоциирован ни с одним субъектом
         /\ Cardinality(obj.subj_assoc) = 0
         /\ obj \notin O_func \cup O_data
+    \* уникальность идентификаторов субъектов и объектов
+    /\ \A sid \in SubjectIDs:
+        /\ Cardinality({s \in S: s.sid = sid}) <= 1
+    /\ \A oid \in ObjectIDs:
+        /\ Cardinality({o \in SelectObjects: o.oid = oid}) <= 1
 
 \* Blocked Invariant
 \* Неразрешенные субъекты не могут быть активными и
@@ -420,7 +425,7 @@ Spec == Init /\ [][Next]_vars
 \* Invariants
 \* Теорема, учитывающая инварианты: доказывается при верификации
 THEOREM Spec => /\ []TypeInv
-                /\ []ObjectsConsistencyInv
+                /\ []ConsistencyInv
                 /\ []BlockedInv
                 /\ []OSKernelExists
                 /\ []SormInits
