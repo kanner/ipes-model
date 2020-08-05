@@ -291,9 +291,16 @@ CreateD ==
 Delete(s,o,o_d) ==
         /\ O_na' = O_na \ {o_d}
         /\ O_data' = O_data \ {o_d}
-        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
-                           dent |-> o_d,
-                           type |-> "delete"])
+        \* если еще с кем-то ассоциирован - изменим состояние
+        /\  \/  /\ o_d.subj_assoc # {s.sid}
+                /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                                   dent |-> [ o_d EXCEPT!["state"]= 1],
+                                   type |-> "delete"])
+            \* удаление своих объектов не меняет состояния
+            \/  /\ o_d.subj_assoc = {s.sid}
+                /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                                   dent |-> o_d,
+                                   type |-> "delete"])
         /\ UNCHANGED <<S_active, O_func, S>>
 
 DeleteD ==
@@ -396,6 +403,18 @@ SormInits ==
         \/  /\ s_sorm \notin S_active
             /\ S_active = {s_0}
 
+\* Correctness
+\* Свойство корректности субъектов при переходе системы
+Correctness ==
+    \* Нельзя изменять состояние ассоциированных объектов другого субъекта
+    /\  \/  /\ SelectPrevQueryDent(Q) \in Objects
+            /\  \/  /\ SelectPrevQueryDent(Q).type \in {"func", "data"}
+                    /\ SelectPrevQueryDent(Q).state # 1
+                \/  /\ SelectPrevQueryDent(Q).type = "na"
+        \* изменен функционально ассоциированный объект
+        \/  /\ SelectPrevQueryDent(Q) \in Subjects
+            /\ SelectPrevQueryProc(Q).state # 1
+
 -------------------------------------------------------------------------------
 
 \* Init
@@ -437,5 +456,6 @@ THEOREM Spec => /\ []TypeInv
                 /\ []BlockedInv
                 /\ []OSKernelExists
                 /\ []SormInits
+                /\ []Correctness
 
 ===============================================================================

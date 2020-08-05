@@ -20,17 +20,26 @@ SormCheckCreate(s) ==
     /\  s.is_blocked = FALSE
     \* дополнительные проверки (идентификация/аутентификация и т.д.)
 
-SormCheckPerm(s,oid,r) ==
+SormCheckPerm(s,id,r) ==
     \* запрос разрешен s_0 и s_sorm
     /\  \/ s.sid \in {s_0.sid, s_sorm.sid}
         \* либо должен быть активизирован s_sorm
         \/ SormInitialized
     \* запросы к o_sorm может совершать только s_sorm
-    /\  \/  /\ oid = o_sorm.oid
+    /\  \/  /\ id = o_sorm.oid
             /\ s.sid = s_sorm.sid
             \* удалять или исполнять o_sorm нельзя
             /\ r \notin {"exec","create","delete"}
-        \/  oid # o_sorm.oid
-            \* дополнительные проверки (правила доступа и т.д.)
+        \* дополнительные проверки (правила доступа и т.д.)
+        \/  id # o_sorm.oid
+    \* правила для выполнения свойств корректности модели ИПСС
+    /\  \/  /\ r \in {"write", "delete"}
+            \* изменение может совершать единственный ассоц. субъект
+            /\ \E o \in SelectObjects:
+                /\ o.oid = id
+                /\ o.subj_assoc = {s.sid}
+        \/  /\ r \notin {"write", "delete"}
+            /\ TRUE
+        \/  FALSE
 
 ===============================================================================
