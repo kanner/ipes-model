@@ -132,7 +132,8 @@ DeleteSubject(s,o) ==
                                 {[ d EXCEPT!["subj_assoc"]=
                                     (d.subj_assoc \ {s.sid})]}
                             /\ O_na' = O_na
-            \/  /\ O_data' = O_data
+            \/  /\ Cardinality(SelectSubjData(s)) = 0
+                /\ O_data' = O_data
                 /\ O_na' = O_na
         /\ S_active' = S_active \ {s}
         /\ Q' = Append(Q, [subj |-> s, proc |-> o,
