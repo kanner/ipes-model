@@ -434,6 +434,23 @@ AbsCorrectnessOpp ==
                         /\ q.subj # SelectPrevQuerySubj(Q)
                 \/  TRUE
 
+\* AbsCorrectness
+\* Свойство абсолютной корректности субъектов
+AbsCorrectness ==
+    /\  \/  /\ \E id \in SubjectIDs:
+                /\ id = SelectPrevQuerySubj(Q).sid
+                /\  \/  /\ SelectPrevQueryDent(Q) \in Objects
+                        /\ \E obj \in Objects:
+                            /\ obj = SelectPrevQueryDent(Q)
+                            \* Изменяемый объект в будущем не станет
+                            \* ассоциированным с другим субъектом
+                            /\ (SelectPrevQueryType(Q) \in {"write","delete"})
+                                        ~> [](obj.subj_assoc \subseteq {id})
+                            \* ~(P ~> Q) makes TLC explode (Practical TLA, 103)
+                            \*~((SelectPrevQueryType(Q) \in {"write","delete"})
+                            \*          ~> (~(obj.subj_assoc \subseteq {id})))
+                    \/  /\ SelectPrevQueryDent(Q) \in Subjects
+
 -------------------------------------------------------------------------------
 
 \* Init
@@ -477,5 +494,6 @@ THEOREM Spec => /\ []TypeInv
                 /\ []SormInits
                 /\ []Correctness
                 /\ []AbsCorrectnessOpp
+                /\ AbsCorrectness
 
 ===============================================================================
