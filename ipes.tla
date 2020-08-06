@@ -415,6 +415,25 @@ Correctness ==
         \/  /\ SelectPrevQueryDent(Q) \in Subjects
             /\ SelectPrevQueryProc(Q).state # 1
 
+\* AbsCorrectnessOpp
+\* Свойство абсолютной корректности субъектов в обратном смысле
+AbsCorrectnessOpp ==
+    /\  \/  /\ SelectPrevQueryDent(Q) \in Objects
+            \* объектами-данными не может стать измененный ранее объект
+            /\  \/  /\ SelectPrevQueryType(Q) = "read"
+                    /\ ~\E q \in SelectQueries(Q, Len(Q)-1, {"write","delete"}):
+                        /\ q.dent = SelectPrevQueryDent(Q)
+                        \* изменять мог только субъект, осуществляющий чтение
+                        /\ q.subj # SelectPrevQuerySubj(Q)
+                \/  TRUE
+            \* функционально ассоц. объектом не может стать измененный ранее объект
+        \/  /\ SelectPrevQueryDent(Q) \in Subjects
+            /\  \/  /\ SelectPrevQueryType(Q) \in {"create_user","create_shadow"}
+                    /\ ~\E q \in SelectQueries(Q, Len(Q)-1, {"read","exec"}):
+                        /\ q.proc = SelectPrevQueryProc(Q)
+                        /\ q.subj # SelectPrevQuerySubj(Q)
+                \/  TRUE
+
 -------------------------------------------------------------------------------
 
 \* Init
@@ -457,5 +476,6 @@ THEOREM Spec => /\ []TypeInv
                 /\ []OSKernelExists
                 /\ []SormInits
                 /\ []Correctness
+                /\ []AbsCorrectnessOpp
 
 ===============================================================================

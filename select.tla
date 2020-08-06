@@ -18,4 +18,13 @@ SelectPrevQueryProc(Sq) == SelectPrevQuery(Sq).proc
 SelectPrevQueryDent(Sq) == SelectPrevQuery(Sq).dent
 SelectPrevQueryType(Sq) == SelectPrevQuery(Sq).type
 
+\* выбор множества запросов определенного типа
+SelectQueries(Sq, L, Types) ==
+    {
+        q \in Queries:
+        \E idx \in 1..L:
+            /\ q = Q[idx]
+            /\ q.type \in Types
+    }
+
 ===============================================================================
