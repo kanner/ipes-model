@@ -1,6 +1,6 @@
---------------------------------- MODULE ipes ---------------------------------
+------------------------------- MODULE ipes -------------------------------
 EXTENDS init, types, select, sorm
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 \* CreateProcessD
 \* Создание функционально ассоциированного объекта
@@ -51,7 +51,8 @@ DeleteProcessD ==
 \* Порождения субъекта-пользователя из объекта
 CreateUser(s,o,s_u) ==
         /\ S_active' = S_active \cup {s_u}
-        /\ O_func' = (O_func \ {o}) \cup {[ o EXCEPT!["subj_assoc"]= {s_u.sid}]}
+        /\ O_func' = (O_func \ {o}) \cup
+                                {[ o EXCEPT!["subj_assoc"]= {s_u.sid}]}
         /\ Q' = Append(Q, [subj |-> s,
                            proc |-> (CHOOSE f \in O_func': f.oid = o.oid),
                            dent |-> s_u,
@@ -82,7 +83,8 @@ CreateUserD ==
 \* Порождения системного субъекта из объекта
 CreateShadow(s,o,s_w) ==
         /\ S_active' = S_active \cup {s_w}
-        /\ O_func' = (O_func \ {o}) \cup {[ o EXCEPT!["subj_assoc"]= {s_w.sid}]}
+        /\ O_func' = (O_func \ {o}) \cup
+                                {[ o EXCEPT!["subj_assoc"]= {s_w.sid}]}
         /\ Q' = Append(Q, [subj |-> s,
                            proc |-> (CHOOSE f \in O_func': f.oid = o.oid),
                            dent |-> s_w,
@@ -314,7 +316,7 @@ DeleteD ==
             \* Постусловия
             /\ Delete(s,o,o_d)
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 \* SormBlockSubjectD
 \* Изменение блокировки субъекта (разрешенный / неразрешенный)
@@ -343,7 +345,7 @@ SormBlockSubjectD ==
             \* Постусловия
             /\ SormBlockSubject(s,o,s_b)
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 \* Type Invariant
 \* Инвариант типов
@@ -418,40 +420,40 @@ Correctness ==
 \* AbsCorrectnessOpp
 \* Свойство абсолютной корректности субъектов в обратном смысле
 AbsCorrectnessOpp ==
-    /\  \/  /\ SelectPrevQueryDent(Q) \in Objects
-            \* объектами-данными не может стать измененный ранее объект
-            /\  \/  /\ SelectPrevQueryType(Q) = "read"
-                    /\ ~\E q \in SelectQueries(Q, Len(Q)-1, {"write","delete"}):
-                        /\ q.dent = SelectPrevQueryDent(Q)
-                        \* изменять мог только субъект, осуществляющий чтение
-                        /\ q.subj # SelectPrevQuerySubj(Q)
-                \/  TRUE
-            \* функционально ассоц. объектом не может стать измененный ранее объект
-        \/  /\ SelectPrevQueryDent(Q) \in Subjects
-            /\  \/  /\ SelectPrevQueryType(Q) \in {"create_user","create_shadow"}
-                    /\ ~\E q \in SelectQueries(Q, Len(Q)-1, {"read","exec"}):
-                        /\ q.proc = SelectPrevQueryProc(Q)
-                        /\ q.subj # SelectPrevQuerySubj(Q)
-                \/  TRUE
+/\  \/  /\ SelectPrevQueryDent(Q) \in Objects
+        \* объектами-данными не может стать измененный ранее объект
+        /\  \/  /\ SelectPrevQueryType(Q) = "read"
+                /\ ~\E q \in SelectQueries(Q, Len(Q)-1, {"write","delete"}):
+                    /\ q.dent = SelectPrevQueryDent(Q)
+                    \* изменять мог только субъект, осуществляющий чтение
+                    /\ q.subj # SelectPrevQuerySubj(Q)
+            \/  TRUE
+    \* функционально ассоц. объектом не может стать измененный ранее объект
+    \/  /\ SelectPrevQueryDent(Q) \in Subjects
+        /\  \/  /\ SelectPrevQueryType(Q) \in {"create_user","create_shadow"}
+                /\ ~\E q \in SelectQueries(Q, Len(Q)-1, {"read","exec"}):
+                    /\ q.proc = SelectPrevQueryProc(Q)
+                    /\ q.subj # SelectPrevQuerySubj(Q)
+            \/  TRUE
 
 \* AbsCorrectness
 \* Свойство абсолютной корректности субъектов
 AbsCorrectness ==
-    /\  \/  /\ \E id \in SubjectIDs:
-                /\ id = SelectPrevQuerySubj(Q).sid
-                /\  \/  /\ SelectPrevQueryDent(Q) \in Objects
-                        /\ \E obj \in Objects:
-                            /\ obj = SelectPrevQueryDent(Q)
-                            \* Изменяемый объект в будущем не станет
-                            \* ассоциированным с другим субъектом
-                            /\ (SelectPrevQueryType(Q) \in {"write","delete"})
-                                        ~> [](obj.subj_assoc \subseteq {id})
-                            \* ~(P ~> Q) makes TLC explode (Practical TLA, 103)
-                            \*~((SelectPrevQueryType(Q) \in {"write","delete"})
-                            \*          ~> (~(obj.subj_assoc \subseteq {id})))
-                    \/  /\ SelectPrevQueryDent(Q) \in Subjects
+/\  \/  /\ \E id \in SubjectIDs:
+            /\ id = SelectPrevQuerySubj(Q).sid
+            /\  \/  /\ SelectPrevQueryDent(Q) \in Objects
+                    /\ \E obj \in Objects:
+                        /\ obj = SelectPrevQueryDent(Q)
+                        \* Изменяемый объект в будущем не станет
+                        \* ассоциированным с другим субъектом
+                        /\ (SelectPrevQueryType(Q) \in {"write","delete"})
+                                    ~> [](obj.subj_assoc \subseteq {id})
+                        \* ~(P ~> Q) makes TLC explode (Practical TLA, 103)
+                        \*~((SelectPrevQueryType(Q) \in {"write","delete"})
+                        \*          ~> (~(obj.subj_assoc \subseteq {id})))
+                \/  /\ SelectPrevQueryDent(Q) \in Subjects
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 \* Init
 \* Инициализация модели
@@ -496,4 +498,4 @@ THEOREM Spec => /\ []TypeInv
                 /\ []AbsCorrectnessOpp
                 /\ AbsCorrectness
 
-===============================================================================
+===========================================================================
