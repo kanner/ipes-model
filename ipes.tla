@@ -228,20 +228,21 @@ ReadD ==
 \* WriteD
 \* Реализация информационного потока на запись
 Write(s,o,o_w) ==
-        \* Изменяется состояние объекта
-        /\  \/  /\ o_w \in O_na
-                /\ O_na' = (O_na \ {o_w}) \cup
-                        {[ o_w EXCEPT!["state"]= 0]}
+        \* изменяем состояние в зависимости от того, чей объект
+        /\  \/  /\ o_w.state # s.sid
+                /\  \/  /\ o_w \in O_na
+                        /\ O_na' = (O_na \ {o_w}) \cup
+                            \* состояние изменено
+                            {[ o_w EXCEPT!["state"]= StateChanged]}
+                        /\ O_data' = O_data
+                    \/  /\ o_w \in O_data
+                        /\ O_data' = (O_data \ {o_w}) \cup
+                            \* состояние изменено
+                            {[ o_w EXCEPT!["state"]= StateChanged]}
+                        /\ O_na' = O_na
+            \* состояние задано субъектом s
+            \/  /\ o_w.state = s.sid
                 /\ O_data' = O_data
-            \/  /\ o_w \in O_data
-                \* если еще с кем-то ассоциирован - изменим состояние
-                /\  \/  /\ o_w.subj_assoc # {s.sid}
-                        /\ O_data' = (O_data \ {o_w}) \cup
-                                {[ o_w EXCEPT!["state"]= 1]}
-                        \* запись в свои объекты не меняет состояния
-                    \/  /\ o_w.subj_assoc = {s.sid}
-                        /\ O_data' = (O_data \ {o_w}) \cup
-                                {[ o_w EXCEPT!["state"]= 0]}
                 /\ O_na' = O_na
         /\ Q' = Append(Q, [subj |-> s, proc |-> o,
                            dent |-> (CHOOSE d \in O_data' \cup O_na':
@@ -266,8 +267,8 @@ Create(s,o,x) ==
         /\ O_na' = O_na \cup {[oid |-> x,
                                type |-> "na",
                                subj_assoc |-> {},
-                               \* изначально состояние пустое
-                               state |-> 0]}
+                               \* начальное состояние задано s
+                               state |-> s.sid]}
         /\ Q' = Append(Q, [subj |-> s, proc |-> o,
                            dent |-> (CHOOSE d \in O_na': d.oid = x),
                            type |-> "create"])
@@ -293,14 +294,16 @@ CreateD ==
 Delete(s,o,o_d) ==
         /\ O_na' = O_na \ {o_d}
         /\ O_data' = O_data \ {o_d}
-        \* если еще с кем-то ассоциирован - изменим состояние
-        /\  \/  /\ o_d.subj_assoc # {s.sid}
+        \* изменяем состояние в зависимости от того, чей объект
+        /\  \/  /\ o_d.state # s.sid
                 /\ Q' = Append(Q, [subj |-> s, proc |-> o,
-                                   dent |-> [ o_d EXCEPT!["state"]= 1],
+                                   \* удалили чужой объект
+                                   dent |-> [ o_d EXCEPT!["state"]=
+                                                      StateChanged],
                                    type |-> "delete"])
-            \* удаление своих объектов не меняет состояния
-            \/  /\ o_d.subj_assoc = {s.sid}
+            \/  /\ o_d.state = s.sid
                 /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                                   \* удалили свой объект
                                    dent |-> o_d,
                                    type |-> "delete"])
         /\ UNCHANGED <<S_active, O_func, S>>

@@ -53,7 +53,7 @@ o_0 ==      [oid        |-> 0,
 o_sorm ==   [oid        |-> 1,
              type       |-> "na",
              subj_assoc |-> {},
-             state      |-> 0]
+             state      |-> 1]
 
 \* инициализирующий запрос
 q_0 ==      [subj        |-> s_0,
