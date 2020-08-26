@@ -22,24 +22,34 @@ SormCheckCreate(s) ==
 
 SormCheckPerm(s,id,r) ==
     \* запрос разрешен s_0 и s_sorm
-    /\  \/ s.sid \in {s_0.sid, s_sorm.sid}
+    /\  IF s.sid \in {s_0.sid, s_sorm.sid}
+        THEN TRUE
         \* либо должен быть активизирован s_sorm
-        \/ SormInitialized
-    \* запросы к o_sorm может совершать только s_sorm
-    /\  \/  /\ id = o_sorm.oid
-            /\ s.sid = s_sorm.sid
-            \* удалять или исполнять o_sorm нельзя
-            /\ r \notin {"exec","create","delete"}
-        \* дополнительные проверки (правила доступа и т.д.)
-        \/  id # o_sorm.oid
+        ELSE SormInitialized
+    \* удалять или исполнять o_sorm нельзя
+    /\  IF id = o_sorm.oid
+        \* иначе нарушится SormInitialized
+        THEN r \notin {"exec","create","delete"}
+        ELSE TRUE
     \* правила для выполнения свойств корректности модели ИПСС
-    /\  \/  /\ r \in {"write", "delete"}
-            \* изменение может совершать единственный ассоц. субъект
-            /\ \E o \in SelectObjects:
-                /\ o.oid = id
-                /\ o.subj_assoc = {s.sid}
-        \/  /\ r \notin {"write", "delete"}
-            /\ TRUE
-        \/  FALSE
+    /\  IF \E o \in SelectObjects: o.oid = id
+        THEN IF r \in QueriesStateChange
+             \* изменение может совершать ассоц. субъект, или объект в O_na
+             THEN   /\ SelectObject(id).subj_assoc \subseteq {s.sid}
+                    \* нельзя изменять чужие неассоциированные объекты
+                    \* в частности o_sorm может изменять только s_sorm
+                    \*/\ SelectObject(id).state = s.sid
+                    \* s_0 не должен изменить o_sorm
+                    /\ SelectObject(id) # o_sorm
+             ELSE
+             IF r \in QueriesAssocChange
+             THEN   \* нельзя изменять ассоциированные объекты с помощью
+                    \* измененных объектов данных: контроль целостности
+                    /\ SelectObject(id).state # StateChanged
+             ELSE   /\ TRUE
+        ELSE \* создание новых объектов
+            TRUE
+    \* другие дополнительные проверки (правила доступа и т.д.)
+    \* при нарушении - запрос запрещен
 
 ===========================================================================

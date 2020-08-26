@@ -412,49 +412,54 @@ SormInits ==
 \* Свойство корректности субъектов при переходе системы
 Correctness ==
     \* Нельзя изменять состояние ассоциированных объектов другого субъекта
-    /\  \/  /\ SelectPrevQueryDent(Q) \in Objects
-            /\  \/  /\ SelectPrevQueryDent(Q).type \in {"func", "data"}
-                    /\ SelectPrevQueryDent(Q).state # 1
-                \/  /\ SelectPrevQueryDent(Q).type = "na"
-        \* изменен функционально ассоциированный объект
-        \/  /\ SelectPrevQueryDent(Q) \in Subjects
-            /\ SelectPrevQueryProc(Q).state # 1
+    IF (/\ SelectPrevQueryType(Q) \in QueriesStateChange
+        /\ SelectPrevQueryDent(Q) \in Objects
+        /\ SelectPrevQueryDent(Q).type \in {"func", "data"})
+    THEN
+        SelectPrevQueryDent(Q).subj_assoc \subseteq {SelectPrevQuerySubj(Q).sid}
+    ELSE
+        TRUE
+
+\* Вспомогательные предикаты для свойств корректности
+EntityStateChanged(ent) ==
+    IF ent \in Objects
+    \* в прошлом был "write", "delete", ... чужих объектов
+    THEN ent.state = StateChanged
+    \*   \E q \in SelectQueries(Q, Len(Q)-1, QueriesStateChange):
+    \*      /\ q.dent = ent
+    \*      \* изменять мог только субъект, осуществляющий доступ
+    \*      /\ q.subj # subj
+    ELSE FALSE \* ent \in Subjects
+
+EntityStateChanging(ent) ==
+    IF ent \in Objects
+    \* "exec", "read", ...
+    THEN SelectPrevQueryType(Q) \in QueriesAssocChange
+    ELSE FALSE \* ent \in Subjects
 
 \* AbsCorrectnessOpp
 \* Свойство абсолютной корректности субъектов в обратном смысле
 AbsCorrectnessOpp ==
-/\  \/  /\ SelectPrevQueryDent(Q) \in Objects
-        \* объектами-данными не может стать измененный ранее объект
-        /\  \/  /\ SelectPrevQueryType(Q) = "read"
-                /\ ~\E q \in SelectQueries(Q, Len(Q)-1, {"write","delete"}):
-                    /\ q.dent = SelectPrevQueryDent(Q)
-                    \* изменять мог только субъект, осуществляющий чтение
-                    /\ q.subj # SelectPrevQuerySubj(Q)
-            \/  TRUE
-    \* функционально ассоц. объектом не может стать измененный ранее объект
-    \/  /\ SelectPrevQueryDent(Q) \in Subjects
-        /\  \/  /\ SelectPrevQueryType(Q) \in {"create_user","create_shadow"}
-                /\ ~\E q \in SelectQueries(Q, Len(Q)-1, {"read","exec"}):
-                    /\ q.proc = SelectPrevQueryProc(Q)
-                    /\ q.subj # SelectPrevQuerySubj(Q)
-            \/  TRUE
+    LET ent == CHOOSE e \in Entities: e = SelectPrevQueryDent(Q)
+        subj == CHOOSE s \in Subjects: s = SelectPrevQuerySubj(Q) IN
+    \* Ассоциированным объектом не может стать измененный ранее объект
+    IF  EntityStateChanging(ent)
+    THEN
+        IF      EntityStateChanged(ent) \* была нарушена целостность
+        THEN    FALSE
+        ELSE    TRUE
+    ELSE TRUE
 
 \* AbsCorrectness
 \* Свойство абсолютной корректности субъектов
 AbsCorrectness ==
-/\  \/  /\ \E id \in SubjectIDs:
-            /\ id = SelectPrevQuerySubj(Q).sid
-            /\  \/  /\ SelectPrevQueryDent(Q) \in Objects
-                    /\ \E obj \in Objects:
-                        /\ obj = SelectPrevQueryDent(Q)
-                        \* Изменяемый объект в будущем не станет
-                        \* ассоциированным с другим субъектом
-                        /\ (SelectPrevQueryType(Q) \in {"write","delete"})
-                                    ~> [](obj.subj_assoc \subseteq {id})
-                        \* ~(P ~> Q) makes TLC explode (Practical TLA, 103)
-                        \*~((SelectPrevQueryType(Q) \in {"write","delete"})
-                        \*          ~> (~(obj.subj_assoc \subseteq {id})))
-                \/  /\ SelectPrevQueryDent(Q) \in Subjects
+    LET ent == CHOOSE e \in Entities: e = SelectPrevQueryDent(Q) IN
+    \* если объект измененен
+    (EntityStateChanged(ent))
+    \* объект в будущем не станет ассоциированным с другим субъектом
+        ~>  <>[] (IF    SelectPrevQueryDent(Q) = ent
+                  THEN  ~EntityStateChanging(ent)
+                  ELSE  TRUE)
 
 ---------------------------------------------------------------------------
 

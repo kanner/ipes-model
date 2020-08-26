@@ -25,6 +25,13 @@ QueryTypes == {"change_blocked", "initial", \* только в начально�
                "exec",
                "read", "write", "create", "delete"}
 
+QueriesSystem == {"change_blocked", "initial"}
+QueriesStateChange == {"write", "create", "delete"}
+    \* TODO: "delete_process", "delete_subject"
+QueriesAssocChange == {"create_user", "create_shadow",
+                        "exec", "read"}
+    \* TODO: "create_process"
+
 ---------------------------------------------------------------------------
 
 \* Субъекты доступа
@@ -46,5 +53,8 @@ Queries  == [subj: Subjects,
              proc: Objects,
              dent: Objects \cup Subjects,
              type: QueryTypes]
+
+\* Сущности системы: субъекты и объекты
+Entities == Subjects \cup Objects
 
 ===========================================================================
