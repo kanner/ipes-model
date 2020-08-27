@@ -32,17 +32,30 @@ CreateProcessD ==
 \* Уничтожение функционально ассоциированного объекта
 DeleteProcess(s,o) ==
         /\ O_func' = O_func \ {o}
-        /\ Q' = Append(Q, [subj |-> s, proc |-> o,
-                           dent |-> o,
-                           type |-> "delete_process"])
+        \* оставим техническую возможность удаления чужих процессов
+        \* (будет запрещено свойством Correctness)
+        /\  \/  /\ o.state # s.sid
+                /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                                   \* удалили чужой объект
+                                   dent |-> [ o EXCEPT!["state"]=
+                                                      StateChanged],
+                                   type |-> "delete_process"])
+            \/  /\ o.state = s.sid
+                /\ Q' = Append(Q, [subj |-> s, proc |-> o,
+                                   \* удалили свой объект
+                                   dent |-> o,
+                                   type |-> "delete_process"])
         /\ UNCHANGED <<S_active, O_data, O_na, S>>
 
 DeleteProcessD ==
         \E s \in S_active:
-        \E o \in SelectSubjProc(s):
+        \E o \in SelectProc:
 
             \* Нельзя удалять последний процесс -> DeleteSubjectD
             /\ Cardinality(SelectSubjProc(s)) > 1
+
+            \* Правила доступа s_sorm
+            /\ SormCheckPerm(s,o.oid,"delete_process")
 
             \* Постусловия
             /\ DeleteProcess(s,o)

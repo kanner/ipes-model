@@ -36,10 +36,7 @@ SormCheckPerm(s,id,r) ==
         THEN IF r \in QueriesStateChange
              \* изменение может совершать ассоц. субъект, или объект в O_na
              THEN   /\ SelectObject(id).subj_assoc \subseteq {s.sid}
-                    \* нельзя изменять чужие неассоциированные объекты
-                    \* в частности o_sorm может изменять только s_sorm
-                    \*/\ SelectObject(id).state = s.sid
-                    \* s_0 не должен изменить o_sorm
+                    \* s_0 и другие не должны изменить o_sorm
                     /\ SelectObject(id) # o_sorm
              ELSE
              IF r \in QueriesAssocChange

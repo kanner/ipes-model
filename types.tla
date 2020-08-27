@@ -26,8 +26,9 @@ QueryTypes == {"change_blocked", "initial", \* только в начально�
                "read", "write", "create", "delete"}
 
 QueriesSystem == {"change_blocked", "initial"}
-QueriesStateChange == {"write", "create", "delete"}
-    \* TODO: "delete_process", "delete_subject"
+QueriesStateChange == {"write", "create", "delete",
+                       "delete_process"}
+    \* TODO: "delete_subject"
 QueriesAssocChange == {"create_user", "create_shadow",
                         "exec", "read"}
     \* TODO: "create_process"
