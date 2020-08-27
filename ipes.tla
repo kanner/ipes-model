@@ -4,14 +4,10 @@ EXTENDS init, types, select, sorm
 
 \* CreateProcessD
 \* Создание функционально ассоциированного объекта
-CreateProcess(s,o,x) ==
-        /\ O_func' = O_func \cup {[oid |-> x,
-                                   type |-> "func",
-                                   subj_assoc |-> {s.sid},
-                                   \* форк наследует состояние
-                                   state |-> o.state]}
+CreateProcess(s,o,o_c) ==
+        /\ O_func' = O_func \cup {o_c}
         /\ Q' = Append(Q, [subj |-> s, proc |-> o,
-                           dent |-> (CHOOSE f \in O_func': f.oid = x),
+                           dent |-> o_c,
                            type |-> "create_process"])
         /\ UNCHANGED <<S_active, O_data, O_na, S>>
 
@@ -22,11 +18,21 @@ CreateProcessD ==
 
         \E x \in ObjectIDs:
 
+            \* обозначим новый объект
+            LET o_c == [oid |-> x,
+                        type |-> "func",
+                        subj_assoc |-> {s.sid},
+                        \* форк наследует состояние
+                        state |-> o.state] IN
+
             \* Выбор свободного идентификатора
-            /\ \A obj \in SelectObjects: obj.oid # x
+            /\ \A obj \in SelectObjects: obj.oid # o_c.oid
+
+            \* Правила доступа s_sorm
+            /\ SormCheckPerm(s,o_c,"create_process")
 
             \* Постусловия
-            /\ CreateProcess(s,o,x)
+            /\ CreateProcess(s,o,o_c)
 
 \* DeleteProcessD
 \* Уничтожение функционально ассоциированного объекта
@@ -55,7 +61,7 @@ DeleteProcessD ==
             /\ Cardinality(SelectSubjProc(s)) > 1
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s,o.oid,"delete_process")
+            /\ SormCheckPerm(s,o,"delete_process")
 
             \* Постусловия
             /\ DeleteProcess(s,o)
@@ -202,7 +208,7 @@ ExecD ==
         \E o_e \in SelectSubjData(s):
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s,o_e.oid,"exec")
+            /\ SormCheckPerm(s,o_e,"exec")
 
             \* Постусловия
             /\ Exec(s,o,o_e)
@@ -233,7 +239,7 @@ ReadD ==
         \E o_r \in SelectObjects \ O_func:
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s,o_r.oid,"read")
+            /\ SormCheckPerm(s,o_r,"read")
 
             \* Постусловия
             /\ Read(s,o,o_r)
@@ -269,21 +275,17 @@ WriteD ==
         \E o_w \in SelectObjects \ O_func:
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s,o_w.oid,"write")
+            /\ SormCheckPerm(s,o_w,"write")
 
             \* Постусловия
             /\ Write(s,o,o_w)
 
 \* CreateD
 \* Реализация информационного потока на создание объекта
-Create(s,o,x) ==
-        /\ O_na' = O_na \cup {[oid |-> x,
-                               type |-> "na",
-                               subj_assoc |-> {},
-                               \* начальное состояние задано s
-                               state |-> s.sid]}
+Create(s,o,o_c) ==
+        /\ O_na' = O_na \cup {o_c}
         /\ Q' = Append(Q, [subj |-> s, proc |-> o,
-                           dent |-> (CHOOSE d \in O_na': d.oid = x),
+                           dent |-> o_c,
                            type |-> "create"])
         /\ UNCHANGED <<S_active, O_func, O_data, S>>
 
@@ -293,14 +295,21 @@ CreateD ==
 
         \E x \in ObjectIDs:
 
+            \* обозначим новый объект
+            LET o_c == [oid |-> x,
+                        type |-> "na",
+                        subj_assoc |-> {},
+                        \* начальное состояние задано s
+                        state |-> s.sid] IN
+
             \* Выбор свободного идентификатора
-            /\ \A obj \in SelectObjects: obj.oid # x
+            /\ \A obj \in SelectObjects: obj.oid # o_c.oid
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s,x,"create")
+            /\ SormCheckPerm(s,o_c,"create")
 
             \* Постусловия
-            /\ Create(s,o,x)
+            /\ Create(s,o,o_c)
 
 \* DeleteD
 \* Реализация информационного потока на удаление объекта
@@ -327,7 +336,7 @@ DeleteD ==
         \E o_d \in SelectObjects \ O_func:
 
             \* Правила доступа s_sorm
-            /\ SormCheckPerm(s,o_d.oid,"delete")
+            /\ SormCheckPerm(s,o_d,"delete")
 
             \* Постусловия
             /\ Delete(s,o,o_d)

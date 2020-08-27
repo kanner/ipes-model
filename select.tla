@@ -5,9 +5,6 @@ EXTENDS init, Sequences
 \* множество O_t модели ИПСС
 SelectObjects == { o \in O_func \cup O_data \cup O_na: TRUE }
 
-\* поиск объекта по oid
-SelectObject(id) == CHOOSE o \in SelectObjects: o.oid = id
-
 \* функционально ассоциированные объекты: процессы
 SelectProc == { o \in O_func: TRUE }
 
