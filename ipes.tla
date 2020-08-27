@@ -461,6 +461,13 @@ AbsCorrectness ==
                   THEN  ~EntityStateChanging(ent)
                   ELSE  TRUE)
 
+\* OSUsabilityLiveness
+\* Свойство возможности использования ОС
+OSUsabilityLiveness ==
+    \* хотя бы в одном состоянии есть субъекты кроме
+    \* s_0 и s_sorm: пользователь или системный субъект
+    <> (Cardinality(S_active) > 2)
+
 ---------------------------------------------------------------------------
 
 \* Init
@@ -504,6 +511,22 @@ THEOREM Spec => /\ []TypeInv
                 /\ []SormInits
                 /\ []Correctness
                 /\ []AbsCorrectnessOpp
-                /\ AbsCorrectness
+
+\* TemporalAssumption
+\* Темпоральное liveness-свойство
+TemporalAssumption ==
+    \* если действие доступно - нужно его выполнить
+    \* (иначе система останется в состоянии stuttering)
+    /\ WF_vars(Next)
+
+\* SpecLiveness
+\* Спецификация модели для проверки темпоральных свойств
+SpecLiveness == Init /\ [][Next]_vars
+                     /\ TemporalAssumption
+
+\* Properties
+\* Теорема, учитывающая темпоральные свойства
+THEOREM SpecLiveness => /\ OSUsabilityLiveness
+                        /\ AbsCorrectness
 
 ===========================================================================
