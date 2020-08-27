@@ -443,10 +443,10 @@ Correctness ==
         TRUE
 
 \* Вспомогательные предикаты для свойств корректности
-EntityStateChanged(ent) ==
+EntityStateChanged(ent, subj) ==
     IF ent \in Objects
     \* в прошлом был "write", "delete", ... чужих объектов
-    THEN ent.state = StateChanged
+    THEN ent.state # subj.sid \* = StateChanged
     \*   \E q \in SelectQueries(Q, Len(Q)-1, QueriesStateChange):
     \*      /\ q.dent = ent
     \*      \* изменять мог только субъект, осуществляющий доступ
@@ -467,7 +467,7 @@ AbsCorrectnessOpp ==
     \* Ассоциированным объектом не может стать измененный ранее объект
     IF  EntityStateChanging(ent)
     THEN
-        IF      EntityStateChanged(ent) \* была нарушена целостность
+        IF      EntityStateChanged(ent, subj) \* была нарушена целостность
         THEN    FALSE
         ELSE    TRUE
     ELSE TRUE
@@ -475,9 +475,10 @@ AbsCorrectnessOpp ==
 \* AbsCorrectness
 \* Свойство абсолютной корректности субъектов
 AbsCorrectness ==
-    LET ent == CHOOSE e \in Entities: e = SelectPrevQueryDent(Q) IN
+    LET ent == CHOOSE e \in Entities: e = SelectPrevQueryDent(Q)
+        subj == CHOOSE s \in Subjects: s = SelectPrevQuerySubj(Q) IN
     \* если объект измененен
-    (EntityStateChanged(ent))
+    (EntityStateChanged(ent, subj))
     \* объект в будущем не станет ассоциированным с другим субъектом
         ~>  <>[] (IF    SelectPrevQueryDent(Q) = ent
                   THEN  ~EntityStateChanging(ent)

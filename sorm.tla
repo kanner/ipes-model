@@ -43,8 +43,8 @@ SormCheckPerm(s,o,r) ==
              IF r \in QueriesAssocChange
              THEN   \* контроль целостности: нельзя изменять ассоц.
                     \* объекты с помощью измененных объектов данных
-                    /\ o.state # StateChanged
-             ELSE   /\ TRUE
+                    o.state = s.sid \* # StateChanged
+             ELSE   TRUE
         ELSE
             \* создание возможно только для личных объектов
             /\ o.subj_assoc \subseteq {s.sid}
