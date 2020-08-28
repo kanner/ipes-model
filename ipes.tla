@@ -183,9 +183,11 @@ DeleteSubjectD ==
 \* Загрузка бинарного образа для выполнения
 Exec(s,o,o_e) ==
         \* Бинарный файл загружается в процесс
-        /\ O_func' = (O_func \ {o}) \cup
-                {[ o EXCEPT!["state"]=
-                    o_e.state]}
+        /\ IF o_e.state # s_0.sid
+           THEN O_func' = (O_func \ {o}) \cup
+                    {[ o EXCEPT!["state"]=
+                        o_e.state]}
+           ELSE O_func' = O_func
             \* Объект перестает быть ассоциированным и переходит в O_na
         /\  \/  /\ Cardinality(o_e.subj_assoc) = 1
                 /\ O_data' = O_data \ {o_e}
@@ -223,9 +225,11 @@ ExecD ==
 \* Реализация информационного потока на чтение
 Read(s,o,o_r) ==
         \* Процесс читает данные и изменяет свое состояние
-        /\ O_func' = (O_func \ {o}) \cup
-                {[ o EXCEPT!["state"]=
-                    o_r.state]}
+        /\ IF o_r.state # s_0.sid
+           THEN O_func' = (O_func \ {o}) \cup
+                    {[ o EXCEPT!["state"]=
+                        o_r.state]}
+           ELSE O_func' = O_func
         \* Объект с данными становится ассоциированным
         /\ O_data' = (O_data \ {o_r}) \cup
             {[oid |-> o_r.oid,
