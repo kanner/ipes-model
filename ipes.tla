@@ -84,16 +84,15 @@ CreateUser(s,o,s_u) ==
 CreateUserD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
-        \E s_u \in (S \ S_active): \* TODO: множество сессий?
-
-            \* TODO: \/ s.sid = s_0.sid
-            \*       \/ s.type = "users"
+        \* оставим техническую возможность мультисессий и каскадных
+        \* сессий (будет запрещено s_sorm)
+        \E s_u \in S:
 
             \* Новый субъект типа "users"
             /\ s_u.type = "users"
 
             \* Правила порождения s_sorm
-            /\ SormCheckCreate(s_u)
+            /\ SormCheckSubj(o, s_u, "create_user")
 
             \* Нельзя порождать из последнего процесса
             /\ Cardinality(SelectSubjProc(s)) > 1
@@ -119,16 +118,15 @@ CreateShadow(s,o,s_w) ==
 CreateShadowD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
-        \E s_w \in (S \ S_active):
-
-            \* Порождение может выполнять только субъект s_0
-            /\ s.sid = s_0.sid
+        \* оставим техническую возможность мультисессий и каскадных
+        \* сессий (будет запрещено s_sorm)
+        \E s_w \in S:
 
             \* Новый субъект типа "system" или "sorm"
             /\ s_w.type \in {"system", "sorm"}
 
             \* Правила порождения s_sorm
-            /\ SormCheckCreate(s_w)
+            /\ SormCheckSubj(o, s_w, "create_shadow")
 
             \* Нельзя порождать из последнего процесса
             /\ Cardinality(SelectSubjProc(s)) > 1
@@ -171,13 +169,13 @@ DeleteSubject(s,o) ==
 DeleteSubjectD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
+        \E s_d \in S_active:
 
-            \* s_0, s_sorm не могут уничтожиться после активизации
-            /\ s.sid # s_0.sid
-            /\ s.sid # s_sorm.sid
+            \* Правила удаления s_sorm
+            /\ SormCheckSubj(o, s_d, "delete_subject")
 
             \* Постусловия
-            /\ DeleteSubject(s,o)
+            /\ DeleteSubject(s_d,o)
 
 \* ExecD
 \* Загрузка бинарного образа для выполнения
@@ -445,12 +443,22 @@ SormInits ==
 \* Correctness
 \* Свойство корректности субъектов при переходе системы
 Correctness ==
+LET ent == CHOOSE e \in Entities: e = SelectPrevQueryDent(Q)
+    subj == CHOOSE s \in Subjects: s = SelectPrevQuerySubj(Q)
+    proc == CHOOSE p \in Objects: p = SelectPrevQueryProc(Q)
+    r == CHOOSE q \in QueryTypes: q = SelectPrevQueryType(Q) IN
     \* Нельзя изменять состояние ассоциированных объектов другого субъекта
-    IF (/\ SelectPrevQueryType(Q) \in QueriesStateChange
-        /\ SelectPrevQueryDent(Q) \in Objects
-        /\ SelectPrevQueryDent(Q).type \in {"func", "data"})
+    IF  r \in QueriesStateChange
     THEN
-        SelectPrevQueryDent(Q).subj_assoc \subseteq {SelectPrevQuerySubj(Q).sid}
+        \* "write", "delete", ...
+        IF ent \in Objects /\ ent.type \in {"func", "data"}
+        THEN ent.subj_assoc \subseteq {subj.sid}
+        ELSE IF ent \in Subjects \* delete_subject
+             THEN proc.subj_assoc \subseteq {ent.sid}
+             ELSE TRUE
+    ELSE IF (r \in QueriesAssocChange
+            /\ ent \in Subjects) \* create_user, create_shadow
+    THEN    proc.state \in {ent.sid, s_0.sid}
     ELSE
         TRUE
 

@@ -11,13 +11,30 @@ SormInitialized ==
         /\ o.oid = 1
         /\ s_sorm.sid \in o.subj_assoc
 
-SormCheckCreate(s) ==
+SormCheckSubj(o, sc, r) ==
     /\  \/  /\ \neg SormInitialized
             \* активизируется s_sorm
-            /\ s.type = "sorm"
+            /\ sc.type = "sorm"
         \* запрос возможен только при активизированном s_sorm
         \/  SormInitialized
-    /\  s.is_blocked = FALSE
+    \* правила для выполнения свойств корректности модели ИПСС
+    \* delete_subject
+    /\  IF   r \in QueriesStateChange
+        THEN
+             \* нельзя удалять чужие ассоциированные объекты
+             /\ o.subj_assoc = {sc.sid}
+             \* s_0, s_sorm не могут уничтожиться после активизации
+             /\ sc \notin {s_0, s_sorm}
+        ELSE TRUE
+    \* create_user, create_shadow
+    /\  IF      r \in QueriesAssocChange
+        THEN
+            \* субъект может породиться сам (без
+            \* каскадных сессий) или от имени s_0
+            /\ o.state \in {sc.sid, s_0.sid}
+            \* субъект не должен быть заблокирован
+            /\ sc.is_blocked = FALSE
+        ELSE TRUE
     \* дополнительные проверки (идентификация/аутентификация и т.д.)
 
 SormCheckPerm(s,o,r) ==
