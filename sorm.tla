@@ -12,20 +12,26 @@ SormInitialized ==
         /\ s_sorm.sid \in o.subj_assoc
 
 SormCheckSubj(o, sc, r) ==
-    /\  \/  /\ \neg SormInitialized
-            \* активизируется s_sorm
-            /\ sc.type = "sorm"
-        \* запрос возможен только при активизированном s_sorm
-        \/  SormInitialized
+    /\  IF  \neg SormInitialized
+        THEN \* активизируется s_sorm
+             /\ sc.type = "sorm"
+        ELSE \* запрос возможен только при активизированном s_sorm
+             /\ SormInitialized
     \* delete_subject
-    /\  \/  /\ r \in QueriesStateChange
-            \* s_0, s_sorm не могут уничтожиться после активизации
-            /\ sc \notin {s_0, s_sorm}
+    /\  IF  r \in QueriesStateChange
+        THEN \* s_0, s_sorm не могут уничтожиться после активизации
+             /\ sc \notin {s_0, s_sorm}
     \* create_user, create_shadow
-        \/  /\ r \in QueriesAssocChange
-            \* субъект не должен быть заблокирован
-            /\ sc.is_blocked = FALSE
-        \/ TRUE
+        ELSE IF r \in QueriesAssocChange
+        THEN \* субъект не должен быть заблокирован
+             /\ sc.is_blocked = FALSE
+    \* change_blocked
+        ELSE IF r \in QueriesSystem
+        THEN \* Административные действия выполняет только s_sorm
+             /\ o.subj_assoc = {s_sorm.sid}
+             \* Блокировать s_0 или s_sorm нельзя
+             /\ sc \notin {s_0, s_sorm}
+        ELSE TRUE
     \* дополнительные проверки (идентификация/аутентификация и т.д.)
 
 SormCheckPerm(s,o,r) ==

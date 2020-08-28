@@ -371,12 +371,8 @@ SormBlockSubjectD ==
         \* только неактивного пользователя
         \E s_b \in S \ S_active:
 
-            \* Административные действия выполняет только s_sorm
-            /\ s.sid = s_sorm.sid
-
-            \* Блокировать s_0 или s_sorm нельзя
-            /\ s_b.sid # s_0.sid
-            /\ s_b.sid # s_sorm.sid
+            \* Правила s_sorm
+            /\ SormCheckSubj(o, s_b, "change_blocked")
 
             \* Постусловия
             /\ SormBlockSubject(s,o,s_b)
