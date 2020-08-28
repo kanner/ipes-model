@@ -446,7 +446,7 @@ Correctness ==
 EntityStateChanged(ent, subj) ==
     IF ent \in Objects
     \* в прошлом был "write", "delete", ... чужих объектов
-    THEN ent.state # subj.sid \* = StateChanged
+    THEN ent.state \notin {subj.sid, s_0.sid} \* = StateChanged
     \*   \E q \in SelectQueries(Q, Len(Q)-1, QueriesStateChange):
     \*      /\ q.dent = ent
     \*      \* изменять мог только субъект, осуществляющий доступ
