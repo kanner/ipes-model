@@ -32,13 +32,18 @@ s_sorm ==   [sid        |-> 1,
              type       |-> "sorm",
              is_blocked |-> FALSE]
 
-\* пользователь
+\* пользователь 1
 s_2 ==      [sid        |-> 2,
              type       |-> "users",
              is_blocked |-> FALSE]
 
+\* пользователь 2
+s_3 ==      [sid        |-> 3,
+             type       |-> "users",
+             is_blocked |-> FALSE]
+
 \* системный субъект
-s_3==       [sid        |-> 3,
+s_4==       [sid        |-> 4,
              type       |-> "system",
              is_blocked |-> FALSE]
 
@@ -54,6 +59,12 @@ o_sorm ==   [oid        |-> 1,
              type       |-> "na",
              subj_assoc |-> {},
              state      |-> 1]
+
+\* o_2 - объект-данные s_0 (корневой каталог)
+o_2 ==      [oid        |-> 2,
+             type       |-> "na",
+             subj_assoc |-> {},
+             state      |-> 0]
 
 \* инициализирующий запрос
 q_0 ==      [subj        |-> s_0,
