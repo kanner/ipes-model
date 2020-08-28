@@ -17,24 +17,15 @@ SormCheckSubj(o, sc, r) ==
             /\ sc.type = "sorm"
         \* запрос возможен только при активизированном s_sorm
         \/  SormInitialized
-    \* правила для выполнения свойств корректности модели ИПСС
     \* delete_subject
-    /\  IF   r \in QueriesStateChange
-        THEN
-             \* нельзя удалять чужие ассоциированные объекты
-             /\ o.subj_assoc = {sc.sid}
-             \* s_0, s_sorm не могут уничтожиться после активизации
-             /\ sc \notin {s_0, s_sorm}
-        ELSE TRUE
+    /\  \/  /\ r \in QueriesStateChange
+            \* s_0, s_sorm не могут уничтожиться после активизации
+            /\ sc \notin {s_0, s_sorm}
     \* create_user, create_shadow
-    /\  IF      r \in QueriesAssocChange
-        THEN
-            \* субъект может породиться сам (без
-            \* каскадных сессий) или от имени s_0
-            /\ o.state \in {sc.sid, s_0.sid}
+        \/  /\ r \in QueriesAssocChange
             \* субъект не должен быть заблокирован
             /\ sc.is_blocked = FALSE
-        ELSE TRUE
+        \/ TRUE
     \* дополнительные проверки (идентификация/аутентификация и т.д.)
 
 SormCheckPerm(s,o,r) ==
@@ -51,15 +42,18 @@ SormCheckPerm(s,o,r) ==
     \* правила для выполнения свойств корректности модели ИПСС
     /\  IF \E obj \in SelectObjects: obj = o
         THEN IF r \in QueriesStateChange
-             \* изменение может совершать ассоц. субъект,
-             \* либо объект должен быть в O_na
+             \* изменение может совершать ассоц. субъект, либо
+             \* объект должен быть в O_na (нельзя изменять/удалять
+             \* чужие ассоциированные объекты)
              THEN   /\ o.subj_assoc \subseteq {s.sid}
                     \* s_0 и другие не должны изменить o_sorm
                     /\ o # o_sorm
              ELSE
              IF r \in QueriesAssocChange
              THEN   \* контроль целостности: нельзя изменять ассоц.
-                    \* объекты с помощью измененных объектов данных
+                    \* объекты с помощью измененных объектов данных;
+                    \* субъект может породиться сам (без
+                    \* каскадных сессий) или от имени s_0
                     o.state \in {s.sid, s_0.sid} \* # StateChanged
                     \* системные объекты - исключение
              ELSE   TRUE

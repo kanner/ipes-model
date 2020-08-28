@@ -93,6 +93,7 @@ CreateUserD ==
 
             \* Правила порождения s_sorm
             /\ SormCheckSubj(o, s_u, "create_user")
+            /\ SormCheckPerm(s_u, o, "create_user")
 
             \* Нельзя порождать из последнего процесса
             /\ Cardinality(SelectSubjProc(s)) > 1
@@ -127,6 +128,7 @@ CreateShadowD ==
 
             \* Правила порождения s_sorm
             /\ SormCheckSubj(o, s_w, "create_shadow")
+            /\ SormCheckPerm(s_w, o, "create_shadow")
 
             \* Нельзя порождать из последнего процесса
             /\ Cardinality(SelectSubjProc(s)) > 1
@@ -173,6 +175,7 @@ DeleteSubjectD ==
 
             \* Правила удаления s_sorm
             /\ SormCheckSubj(o, s_d, "delete_subject")
+            /\ SormCheckPerm(s_d, o, "delete_subject")
 
             \* Постусловия
             /\ DeleteSubject(s_d,o)
