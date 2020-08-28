@@ -71,7 +71,10 @@ DeleteProcessD ==
 CreateUser(s,o,s_u) ==
         /\ S_active' = S_active \cup {s_u}
         /\ O_func' = (O_func \ {o}) \cup
-                                {[ o EXCEPT!["subj_assoc"]= {s_u.sid}]}
+                                {[oid |-> o.oid,
+                                  type |-> o.type,
+                                  subj_assoc |-> {s_u.sid},
+                                  state |-> s_u.sid]}
         /\ Q' = Append(Q, [subj |-> s,
                            proc |-> (CHOOSE f \in O_func': f.oid = o.oid),
                            dent |-> s_u,
@@ -103,7 +106,10 @@ CreateUserD ==
 CreateShadow(s,o,s_w) ==
         /\ S_active' = S_active \cup {s_w}
         /\ O_func' = (O_func \ {o}) \cup
-                                {[ o EXCEPT!["subj_assoc"]= {s_w.sid}]}
+                                {[oid |-> o.oid,
+                                  type |-> o.type,
+                                  subj_assoc |-> {s_w.sid},
+                                  state |-> s_w.sid]}
         /\ Q' = Append(Q, [subj |-> s,
                            proc |-> (CHOOSE f \in O_func': f.oid = o.oid),
                            dent |-> s_w,
@@ -236,7 +242,7 @@ Read(s,o,o_r) ==
 ReadD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
-        \E o_r \in SelectObjects \ O_func:
+        \E o_r \in SelectObjects \ SelectProc:
 
             \* Правила доступа s_sorm
             /\ SormCheckPerm(s,o_r,"read")
@@ -272,7 +278,7 @@ Write(s,o,o_w) ==
 WriteD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
-        \E o_w \in SelectObjects \ O_func:
+        \E o_w \in SelectObjects \ SelectProc:
 
             \* Правила доступа s_sorm
             /\ SormCheckPerm(s,o_w,"write")
@@ -333,7 +339,7 @@ Delete(s,o,o_d) ==
 DeleteD ==
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
-        \E o_d \in SelectObjects \ O_func:
+        \E o_d \in SelectObjects \ SelectProc:
 
             \* Правила доступа s_sorm
             /\ SormCheckPerm(s,o_d,"delete")
@@ -390,6 +396,8 @@ ConsistencyInv ==
         /\ \E subj \in S_active: proc.subj_assoc = {subj.sid}
         \* объект не может состоять в другом множестве
         /\ proc \notin O_data \cup O_na
+        \* state должен соответствовать субъекту
+        /\ proc.state \in proc.subj_assoc
     /\ \A data \in O_data:
         \* объект м.б. ассоциирован как данные с несколькими субъектами
         /\ Cardinality(data.subj_assoc) >= 1
