@@ -549,9 +549,16 @@ Next ==
         \* Административные действия
         \/ SormBlockSubjectD
 
+\* TemporalAssumption
+\* Темпоральное liveness-свойство
+TemporalAssumption ==
+    \* если действие доступно - нужно его выполнить
+    \* (иначе система останется в состоянии stuttering)
+    /\ WF_vars(Next)
+
 \* Spec
 \* Спецификация модели
-Spec == Init /\ [][Next]_vars
+Spec == Init /\ [][Next]_vars /\ TemporalAssumption
 
 \* Invariants
 \* Теорема, учитывающая инварианты: доказывается при верификации
@@ -563,21 +570,9 @@ THEOREM Spec => /\ []TypeInv
                 /\ []Correctness
                 /\ []AbsCorrectnessOpp
 
-\* TemporalAssumption
-\* Темпоральное liveness-свойство
-TemporalAssumption ==
-    \* если действие доступно - нужно его выполнить
-    \* (иначе система останется в состоянии stuttering)
-    /\ WF_vars(Next)
-
-\* SpecLiveness
-\* Спецификация модели для проверки темпоральных свойств
-SpecLiveness == Init /\ [][Next]_vars
-                     /\ TemporalAssumption
-
 \* Properties
 \* Теорема, учитывающая темпоральные свойства
-THEOREM SpecLiveness => /\ OSUsabilityLiveness
-                        /\ AbsCorrectness
+THEOREM Spec => /\ OSUsabilityLiveness
+                /\ AbsCorrectness
 
 ===========================================================================
