@@ -462,31 +462,35 @@ LET ent == CHOOSE e \in Entities: e = SelectPrevQueryDent(Q)
         TRUE
 
 \* Вспомогательные предикаты для свойств корректности
-EntityStateChanged(ent, subj) ==
+EntityStateChanged(subj, proc, ent) ==
     IF ent \in Objects
     \* в прошлом был "write", "delete", ... чужих объектов
     THEN ent.state \notin {subj.sid, s_0.sid} \* = StateChanged
-    \*   \E q \in SelectQueries(Q, Len(Q)-1, QueriesStateChange):
-    \*      /\ q.dent = ent
-    \*      \* изменять мог только субъект, осуществляющий доступ
-    \*      /\ q.subj # subj
-    ELSE FALSE \* ent \in Subjects
+    \* "create_user", "create_shadow"
+    ELSE IF ent \in Subjects
+    THEN \* в прошлом был create_process
+        \E q \in SelectQueries(Q, Len(Q)-1, QueriesStateChange):
+            /\ q.dent = proc
+            \* изменять мог только субъект, осуществляющий доступ
+            /\ q.dent.state # subj.sid
+            \* q.subj # subj
+\* исключение для системного субъекта s_0?
+    ELSE FALSE
 
 EntityStateChanging(ent) ==
-    IF ent \in Objects
-    \* "exec", "read", ...
-    THEN SelectPrevQueryType(Q) \in QueriesAssocChange
-    ELSE FALSE \* ent \in Subjects
+    \* "create_user", "create_shadow", "exec", "read"
+    /\ SelectPrevQueryType(Q) \in QueriesAssocChange
 
 \* AbsCorrectnessOpp
 \* Свойство абсолютной корректности субъектов в обратном смысле
 AbsCorrectnessOpp ==
     LET ent == CHOOSE e \in Entities: e = SelectPrevQueryDent(Q)
-        subj == CHOOSE s \in Subjects: s = SelectPrevQuerySubj(Q) IN
+        subj == CHOOSE s \in Subjects: s = SelectPrevQuerySubj(Q)
+        proc == CHOOSE p \in Objects: p = SelectPrevQueryProc(Q) IN
     \* Ассоциированным объектом не может стать измененный ранее объект
     IF  EntityStateChanging(ent)
     THEN
-        IF      EntityStateChanged(ent, subj) \* была нарушена целостность
+        IF      EntityStateChanged(subj, proc, ent) \* была нарушена целостность
         THEN    FALSE
         ELSE    TRUE
     ELSE TRUE
@@ -495,9 +499,10 @@ AbsCorrectnessOpp ==
 \* Свойство абсолютной корректности субъектов
 AbsCorrectness ==
     LET ent == CHOOSE e \in Entities: e = SelectPrevQueryDent(Q)
-        subj == CHOOSE s \in Subjects: s = SelectPrevQuerySubj(Q) IN
+        subj == CHOOSE s \in Subjects: s = SelectPrevQuerySubj(Q)
+        proc == CHOOSE p \in Objects: p = SelectPrevQueryProc(Q) IN
     \* если объект измененен
-    (EntityStateChanged(ent, subj))
+    (EntityStateChanged(subj, proc, ent))
     \* объект в будущем не станет ассоциированным с другим субъектом
         ~>  <>[] (IF    SelectPrevQueryDent(Q) = ent
                   THEN  ~EntityStateChanging(ent)
