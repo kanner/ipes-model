@@ -15,6 +15,7 @@ CreateProcessD ==
         \* Активизирующее воздействие субъекта и его процесса
         \E s \in S_active:
         \E o \in SelectSubjProc(s):
+        \E st \in ObjectStates:
 
         \E x \in ObjectIDs:
 
@@ -22,8 +23,12 @@ CreateProcessD ==
             LET o_c == [oid |-> x,
                         type |-> "func",
                         subj_assoc |-> {s.sid},
-                        \* форк наследует состояние
-                        state |-> o.state] IN
+                        state |-> st] IN
+
+            /\  IF o.state # s.sid
+                THEN st = StateChanged
+                \* форк наследует состояние
+                ELSE st = o.state
 
             \* Выбор свободного идентификатора
             /\ \A obj \in SelectObjects: obj.oid # o_c.oid
@@ -466,15 +471,14 @@ EntityStateChanged(subj, proc, ent) ==
     IF ent \in Objects
     \* в прошлом был "write", "delete", ... чужих объектов
     THEN ent.state \notin {subj.sid, s_0.sid} \* = StateChanged
-    \* "create_user", "create_shadow"
     ELSE IF ent \in Subjects
-    THEN \* в прошлом был create_process
-        \E q \in SelectQueries(Q, Len(Q)-1, QueriesStateChange):
+    \* в прошлом был "create_process", ... чужих объектов
+    THEN proc.state = StateChanged
+         (* \* too slow check
+         \E q \in SelectQueries(Q, Len(Q)-1, QueriesStateChange):
             /\ q.dent = proc
             \* изменять мог только субъект, осуществляющий доступ
-            /\ q.dent.state # subj.sid
-            \* q.subj # subj
-\* исключение для системного субъекта s_0?
+            /\ q.dent.state # subj.sid *)
     ELSE FALSE
 
 EntityStateChanging(ent) ==
