@@ -561,7 +561,7 @@ TemporalAssumption ==
 Spec == Init /\ [][Next]_vars /\ TemporalAssumption
 
 \* Invariants
-\* Теорема, учитывающая инварианты: доказывается при верификации
+\* Теорема, учитывающая инварианты и свойства: доказывается при верификации
 THEOREM Spec => /\ []TypeInv
                 /\ []ConsistencyInv
                 /\ []BlockedInv
@@ -569,10 +569,7 @@ THEOREM Spec => /\ []TypeInv
                 /\ []SormInits
                 /\ []Correctness
                 /\ []AbsCorrectnessOpp
-
-\* Properties
-\* Теорема, учитывающая темпоральные свойства
-THEOREM Spec => /\ OSUsabilityLiveness
-                /\ AbsCorrectness
+		/\ OSUsabilityLiveness
+		/\ AbsCorrectness
 
 ===========================================================================
