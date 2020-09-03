@@ -494,7 +494,8 @@ AbsCorrectnessOpp ==
     \* Ассоциированным объектом не может стать измененный ранее объект
     IF  EntityStateChanging(ent)
     THEN
-        IF      EntityStateChanged(subj, proc, ent) \* была нарушена целостность
+        IF      EntityStateChanged(subj, proc, ent)
+                \* была нарушена целостность
         THEN    FALSE
         ELSE    TRUE
     ELSE TRUE
@@ -560,7 +561,7 @@ TemporalAssumption ==
 \* Спецификация модели
 Spec == Init /\ [][Next]_vars /\ TemporalAssumption
 
-\* Invariants
+\* Invariants and Temporal Properties
 \* Теорема, учитывающая инварианты и свойства: доказывается при верификации
 THEOREM Spec => /\ []TypeInv
                 /\ []ConsistencyInv
@@ -569,7 +570,7 @@ THEOREM Spec => /\ []TypeInv
                 /\ []SormInits
                 /\ []Correctness
                 /\ []AbsCorrectnessOpp
-		/\ OSUsabilityLiveness
-		/\ AbsCorrectness
+                /\ OSUsabilityLiveness
+                /\ AbsCorrectness
 
 ===========================================================================
